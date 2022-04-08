@@ -143,42 +143,22 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Card.h" />
     <ClInclude Include="ConsoleControl.h" />
-    <ClInclude Include="Constants.h" />
-    <ClInclude Include="Game.h" />
     <ClInclude Include="InputMemoryStream.h" />
-    <ClInclude Include="Match.h" />
-    <ClInclude Include="Maze.h" />
-    <ClInclude Include="Medicine.h" />
-    <ClInclude Include="Organ.h" />
     <ClInclude Include="OutputMemoryStream.h" />
-    <ClInclude Include="Player.h" />
     <ClInclude Include="Port.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Selector.h" />
     <ClInclude Include="Status.h" />
     <ClInclude Include="TcpListener.h" />
     <ClInclude Include="TcpSocket.h" />
-    <ClInclude Include="Treatment.h" />
-    <ClInclude Include="Virus.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Card.cpp" />
     <ClCompile Include="ConsoleControl.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="Match.cpp" />
-    <ClCompile Include="Maze.cpp" />
-    <ClCompile Include="Medicine.cpp" />
-    <ClCompile Include="Organ.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Protocol.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Status.cpp" />
     <ClCompile Include="TcpListener.cpp" />
     <ClCompile Include="TcpSocket.cpp" />
-    <ClCompile Include="Treatment.cpp" />
-    <ClCompile Include="Virus.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

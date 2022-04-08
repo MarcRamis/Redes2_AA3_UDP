@@ -39,40 +39,10 @@
     <ClInclude Include="Port.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Match.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Protocol.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Card.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ConsoleControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Maze.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Organ.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Virus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Medicine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Treatment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,37 +59,7 @@
     <ClCompile Include="Status.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Match.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Card.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ConsoleControl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Maze.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Organ.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Virus.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Medicine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Treatment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
