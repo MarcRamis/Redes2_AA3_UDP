@@ -152,6 +152,7 @@
     <ClInclude Include="Status.h" />
     <ClInclude Include="TcpListener.h" />
     <ClInclude Include="TcpSocket.h" />
+    <ClInclude Include="UdpSocket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleControl.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Status.cpp" />
     <ClCompile Include="TcpListener.cpp" />
     <ClCompile Include="TcpSocket.cpp" />
+    <ClCompile Include="UdpSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
