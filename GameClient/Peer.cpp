@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include <Selector.h>
+#include <UdpSocket.h>
 
 int main()
 {
@@ -24,7 +24,7 @@ int main()
 		//std::string message = "Mi IP : " + sf::IpAddress::getLocalAddress().toString();
 		socket.send(oms.GetBufferPtr(), oms.GetLength(), sf::IpAddress::getLocalAddress().toString(), 55002);
 		
-		// Recepción de respuesta
+		// Recepciï¿½n de respuesta
 		char buffer[1024];
 		std::size_t received = 0;
 		sf::IpAddress sender;
