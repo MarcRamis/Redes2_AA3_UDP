@@ -4,15 +4,25 @@
 
 int main()
 {
+	bool findPort = false;
 	// Crear socket y hacer bind al puerto 55001
 	sf::UdpSocket socket;
-	socket.bind(55001);
+	unsigned short port = 55001;
+
+	while (socket.bind(port) != sf::Socket::Status::Done)
+	{
+		port++;
+	}
+	
 
 	while (true)
 	{
 		// Enviar mensaje al Puerto 55002 en la IP 192.168.1.50
-		std::string message = "Mi IP : " + sf::IpAddress::getLocalAddress().toString();
-		socket.send(message.c_str(), message.size() + 1, sf::IpAddress::getLocalAddress().toString(), 55002);
+		int x = 1;
+		OutputMemoryStream oms;
+		oms.Write(x);
+		//std::string message = "Mi IP : " + sf::IpAddress::getLocalAddress().toString();
+		socket.send(oms.GetBufferPtr(), oms.GetLength(), sf::IpAddress::getLocalAddress().toString(), 55002);
 		
 		// Recepción de respuesta
 		char buffer[1024];
@@ -20,6 +30,7 @@ int main()
 		sf::IpAddress sender;
 		unsigned short port;
 		socket.receive(buffer, sizeof(buffer), received, sender, port);
+		std::cout << sender.toString() << " dice: " << buffer << std::endl;
 	}
 
 	return 0;

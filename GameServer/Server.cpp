@@ -1,6 +1,13 @@
 
 #include <Selector.h>
 
+void ReceiveClients()
+{
+
+}
+
+std::vector<Port> myClients;
+
 int main()
 {
 	// Crear Socket y hacer el bind al puerto 55002
@@ -15,8 +22,14 @@ int main()
 		sf::IpAddress sender;
 		unsigned short port;
 		socket.receive(buffer, sizeof(buffer), received, sender, port);
-		std::cout << sender.toString() << " dice: " << buffer << std::endl;
+		InputMemoryStream* ims = new InputMemoryStream(buffer, received);
+		int x = 0;
+		ims->Read(&x);
+		std::cout << sender.toString() << " dice: " << x << std::endl;
 		
+		//if()
+
+
 		// Envío de respuesta
 		std::string message = "Bienvenido " + sender.toString();
 		socket.send(message.c_str(), message.size() + 1, sender, port);
