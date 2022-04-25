@@ -144,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConsoleControl.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="InputMemoryStream.h" />
     <ClInclude Include="OutputMemoryStream.h" />
     <ClInclude Include="Port.h" />

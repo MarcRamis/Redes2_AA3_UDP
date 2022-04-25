@@ -2,77 +2,71 @@
 #include <iostream>
 #include <UdpSocket.h>
 
-void ReceiveClients()
-{
-
-}
+#include "Constants.h"
 
 int main()
 {
-	// Crear Socket y hacer el bind al puerto 55002
-	sf::UdpSocket socket;
-	socket.bind(55001);
+	// Init
 	std::vector<unsigned short> myClients;
 	bool isNewClient;
+	UdpSocket *socket = new UdpSocket;
+	socket->Bind(SERVER_IP);
 
+	// Loop
 	while (true)
 	{
-		// Recibir mensaje
-		char buffer[1024];
-		std::size_t received = 0;
-		sf::IpAddress sender;
-		unsigned short port;
-
-		sf::Packet pack;
-		
-		// Receive clients at the beginnng
-		if (socket.receive(pack, sender, port) == sf::Socket::Done)
+		InputMemoryStream ims = *socket->Receive();	 
+		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
+			// Search if the client exists
 			isNewClient = true;
 			for (unsigned short p : myClients)
 			{
-				if (p == port)
+				if (p == socket->PortReceived())
 				{
 					isNewClient = false;
 					break;
 				}
 			}
+
+			// Receive new clients
 			if (isNewClient)
 			{
-				std::cout << sender.toString() << " tells: " << port << std::endl;
-
-				// Envío de respuesta
-				myClients.push_back(port);
-				std::string message = "Welcome " + sender.toString();
-				socket.send(message.c_str(), message.size() + 1, sender, port);
+				// Read the message
+				std::string messageReceived, ipReceived;
+				messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
+				std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
 				
+				// Send Answer
+				std::string messageToSend = "Welcome " + socket->AddressStringReceived();
+				OutputMemoryStream oms;
+				oms.WriteString(messageToSend);
+				socket->Send(oms, socket->PortReceived());
+				
+				// Store in table
+				myClients.push_back(socket->PortReceived());
 				std::cout << "Table size: " << myClients.size() << std::endl;
 			}
+
+			// Receive messages from the current clients connected to the server
 			else
 			{
 				// Read the message
-				std::string message = " ";
-				pack >> message;
-				//InputMemoryStream* ims = new InputMemoryStream(buffer, received);
-				//message = ims->ReadString();
-				std::cout << port << ": " << message << std::endl;
+				std::string messageReceived = " ";
+				messageReceived = ims.ReadString();
+				std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
 
-				sf::Packet packWrite;
 				// Send it to the other clients
 				for (unsigned short p : myClients)
 				{
-					if (p != port)
+					if (p != socket->PortReceived())
 					{
-						
-						//OutputMemoryStream oms;
-						packWrite << port << message;
-						//oms.Write(port);
-						//oms.WriteString(message);
-						socket.send(packWrite, sender, p);
+						OutputMemoryStream oms;
+						oms.Write(socket->PortReceived());
+						oms.WriteString(messageReceived);
+						socket->Send(oms, p);
 					}
 				}
-				packWrite.clear();
-				pack.clear();
 			}
 		}
 	}

@@ -1,8 +1,10 @@
 #pragma once
 #include "Status.h"
 #include "Port.h"
+
 #include "InputMemoryStream.h"
 #include "OutputMemoryStream.h"
+#include "Constants.h"
 
 class UdpSocket
 {
@@ -19,7 +21,7 @@ public:
 	sf::UdpSocket* GetSocket();
 	void SetSocket(sf::UdpSocket* _udpSocket);
 	
-	Status Bind(unsigned int _port);
+	Status Bind(unsigned short _port);
 	
 	std::string GetPublicIP();
 	std::string GetLocalIP();

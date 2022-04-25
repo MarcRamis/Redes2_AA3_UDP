@@ -2,6 +2,8 @@
 
 UdpSocket::UdpSocket()
 {
+	if (udpSocket == nullptr)
+		udpSocket = new sf::UdpSocket();
 }
 
 UdpSocket::UdpSocket(sf::UdpSocket* _tcpSocket)
@@ -10,6 +12,8 @@ UdpSocket::UdpSocket(sf::UdpSocket* _tcpSocket)
 
 UdpSocket::~UdpSocket()
 {
+	if (udpSocket != nullptr)
+		delete udpSocket;
 }
 
 sf::UdpSocket* UdpSocket::GetSocket()
@@ -22,9 +26,10 @@ void UdpSocket::SetSocket(sf::UdpSocket* _udpSocket)
 	udpSocket = _udpSocket;
 }
 
-Status UdpSocket::Bind(unsigned int _port)
+Status UdpSocket::Bind(unsigned short _port)
 {
 	Status status(udpSocket->bind(_port));
+
 	return status;
 }
 
@@ -45,7 +50,7 @@ unsigned int UdpSocket::GetLocalPort()
 
 InputMemoryStream* UdpSocket::Receive()
 {
-	char buffer[1024];
+	char buffer[BYTE_CAPACITY];
 	size_t br;
 	Address _sender;
 	unsigned short _port;

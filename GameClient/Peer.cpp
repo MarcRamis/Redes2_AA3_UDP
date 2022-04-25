@@ -3,18 +3,15 @@
 #include <thread>
 #include <UdpSocket.h>
 
-void Receive(sf::UdpSocket *socket)
+#include "Constants.h"
+
+void Receive(UdpSocket *socket)
 {
 	while (true)
 	{
-		char buffer[1024];
-		std::size_t received = 0;
-		sf::IpAddress sender;
-		unsigned short port;
-
-		sf::Packet pack;
+		InputMemoryStream* ims = socket->Receive();
 		
-		if (socket->receive(pack, sender, port) != sf::Socket::Done)
+		if (socket->StatusReceived().GetStatus() != Status::EStatusType::DONE)
 		{
 			std::cout << "No message" << std::endl;
 		}
@@ -22,65 +19,72 @@ void Receive(sf::UdpSocket *socket)
 		{
 			unsigned short otherClientPort = 0;
 			std::string otherClientMessage;
-			
-			pack >> otherClientPort >> otherClientMessage;
-			//InputMemoryStream* ims = new InputMemoryStream(buffer, received);
-			//ims->Read(&otherClientPort);
-			//otherClientMessage = ims->ReadString();
 
-			std::cout << std::endl;
+			ims->Read(&otherClientPort);
+			otherClientMessage = ims->ReadString();
+			
 			std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
 		}
 	}
 }
 
-int main()
+void WelcomeMessage(UdpSocket* socket)
 {
-	bool findPort = false;
-	sf::UdpSocket socket;
-	unsigned short port = 55002;
-	std::string ip = sf::IpAddress::getLocalAddress().toString();
-	while (socket.bind(port) != sf::Socket::Status::Done)
+	unsigned short port = CLIENT_IP_START;
+
+	// Find for avalaible ports
+	while (socket->Bind(port).GetStatus() != Status::EStatusType::DONE)
 	{
 		port++;
 	}
+
+	// Send Welcome Message
+	std::string message = "Hi Server, my IP is: ";
+	OutputMemoryStream oms;
+	oms.WriteString(message); oms.WriteString(socket->GetLocalIP());
+	socket->Send(oms, SERVER_IP);
+
+	// Receive Welcome Message
+	InputMemoryStream ims = *socket->Receive();
+	std::string messageReceived;
+	messageReceived = ims.ReadString();
+	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
+	{
+		std::cout << socket->AddressStringReceived() << " tells: " << messageReceived << std::endl;
+	}
+}
+
+int main()
+{
+	UdpSocket *socket = new UdpSocket;
 	
-	// Init message
-	std::string message = "Mi IP : " + sf::IpAddress::getLocalAddress().toString();
-	socket.send(message.c_str(), message.size() + 1, sf::IpAddress::getLocalAddress().toString(), 55001);
-	char buffer[1024];
-	std::size_t received = 0;
-	sf::IpAddress sender;
-	unsigned short serverPort;
-	if (socket.receive(buffer, sizeof(buffer), received, sender, serverPort) != sf::Socket::Done)
-	{
-		std::cout << "No message" << std::endl;
-	}
-	else
-	{
-		std::cout << sender.toString() << " tells: " << buffer << std::endl;
-	}
-
-	// Thread to receive packets
-	std::thread tReceive(Receive, &socket);
+	// Init
+	WelcomeMessage(socket);
+	
+	// Thread to receive messages
+	std::thread tReceive(Receive, socket);
 	tReceive.detach();
-
-	// Send message to server
-	std::cout << "Write a message: " << std::endl;
+	
+	// Chat
+	std::cout << "Write a message: | 'e' to close program " << std::endl;
+	std::string message = " ";
 	do
 	{
-		//OutputMemoryStream oms;
-		std::string message = " ";
-		
 		std::getline(std::cin, message);
 
-		sf::Packet pack;
-		pack << message;
-		//oms.WriteString(message);
-		socket.send(pack, sf::IpAddress::getLocalAddress().toString(), 55001);
-		pack.clear();
-
-	} while (true);
-
+		if (message != "e")
+		{
+			OutputMemoryStream oms;
+			oms.WriteString(message);
+			socket->Send(oms, SERVER_IP);
+		}
+		else
+		{
+			// MAKE DISCONNECT
+			// ADVICE SERVER
+		}
+		
+	} while (message != "e");
+	
 	return 0;
 }
