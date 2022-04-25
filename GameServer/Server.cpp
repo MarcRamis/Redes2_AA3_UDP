@@ -7,13 +7,13 @@ void ReceiveClients()
 
 }
 
-std::vector<Port> myClients;
-
 int main()
 {
 	// Crear Socket y hacer el bind al puerto 55002
 	sf::UdpSocket socket;
-	socket.bind(55002);
+	socket.bind(55001);
+	std::vector<unsigned short> myClients;
+	bool isNewClient;
 
 	while (true)
 	{
@@ -22,18 +22,59 @@ int main()
 		std::size_t received = 0;
 		sf::IpAddress sender;
 		unsigned short port;
-		socket.receive(buffer, sizeof(buffer), received, sender, port);
-		InputMemoryStream* ims = new InputMemoryStream(buffer, received);
-		int x = 0;
-		ims->Read(&x);
-		std::cout << sender.toString() << " dice: " << x << std::endl;
+
+		sf::Packet pack;
 		
-		//if()
+		// Receive clients at the beginnng
+		if (socket.receive(pack, sender, port) == sf::Socket::Done)
+		{
+			isNewClient = true;
+			for (unsigned short p : myClients)
+			{
+				if (p == port)
+				{
+					isNewClient = false;
+					break;
+				}
+			}
+			if (isNewClient)
+			{
+				std::cout << sender.toString() << " tells: " << port << std::endl;
 
+				// Envío de respuesta
+				myClients.push_back(port);
+				std::string message = "Welcome " + sender.toString();
+				socket.send(message.c_str(), message.size() + 1, sender, port);
+				
+				std::cout << "Table size: " << myClients.size() << std::endl;
+			}
+			else
+			{
+				// Read the message
+				std::string message = " ";
+				pack >> message;
+				//InputMemoryStream* ims = new InputMemoryStream(buffer, received);
+				//message = ims->ReadString();
+				std::cout << port << ": " << message << std::endl;
 
-		// Envío de respuesta
-		std::string message = "Bienvenido " + sender.toString();
-		socket.send(message.c_str(), message.size() + 1, sender, port);
+				sf::Packet packWrite;
+				// Send it to the other clients
+				for (unsigned short p : myClients)
+				{
+					if (p != port)
+					{
+						
+						//OutputMemoryStream oms;
+						packWrite << port << message;
+						//oms.Write(port);
+						//oms.WriteString(message);
+						socket.send(packWrite, sender, p);
+					}
+				}
+				packWrite.clear();
+				pack.clear();
+			}
+		}
 	}
 
 	return 0;

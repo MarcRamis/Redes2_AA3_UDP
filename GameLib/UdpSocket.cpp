@@ -24,7 +24,8 @@ void UdpSocket::SetSocket(sf::UdpSocket* _udpSocket)
 
 Status UdpSocket::Bind(unsigned int _port)
 {
-	return udpSocket->bind(_port);
+	Status status(udpSocket->bind(_port));
+	return status;
 }
 
 std::string UdpSocket::GetPublicIP()
@@ -40,6 +41,44 @@ std::string UdpSocket::GetLocalIP()
 unsigned int UdpSocket::GetLocalPort()
 {
 	return udpSocket->getLocalPort();
+}
+
+InputMemoryStream* UdpSocket::Receive()
+{
+	char buffer[1024];
+	size_t br;
+	Address _sender;
+	unsigned short _port;
+
+	statusReceived = udpSocket->receive(buffer, sizeof(buffer), br, _sender.ip, _port);
+	portReceived.port = _port;
+	ipReceived.ip = _sender.ip;
+
+	InputMemoryStream* ims = new InputMemoryStream(buffer, br);
+
+	return ims;
+}
+
+Status UdpSocket::StatusReceived()
+{
+	return statusReceived;
+}
+
+unsigned short UdpSocket::PortReceived()
+{
+	return portReceived.port;
+}
+
+std::string UdpSocket::AddressStringReceived()
+{
+	return ipReceived.GetAddress().toString();
+}
+
+Status UdpSocket::Send(OutputMemoryStream& _oms, unsigned short _portToSend)
+{
+	Status status(udpSocket->send(_oms.GetBufferPtr(), _oms.GetLength(), GetLocalIP(), _portToSend));
+	
+	return status;
 }
 
 void UdpSocket::Disconnect()

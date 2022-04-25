@@ -7,8 +7,10 @@
 class UdpSocket
 {
 	sf::UdpSocket* udpSocket;
-	Status messageReceivedStatus;
-
+	Status statusReceived;
+	Port portReceived;
+	Address ipReceived;
+	
 public:
 	UdpSocket();
 	UdpSocket(sf::UdpSocket* _tcpSocket);
@@ -16,13 +18,18 @@ public:
 
 	sf::UdpSocket* GetSocket();
 	void SetSocket(sf::UdpSocket* _udpSocket);
+	
 	Status Bind(unsigned int _port);
+	
 	std::string GetPublicIP();
 	std::string GetLocalIP();
 	unsigned int GetLocalPort();
-	Status StatusReceived();
+	
 	InputMemoryStream* Receive();
-	Status Send(OutputMemoryStream& _oms);
-
+	Status StatusReceived();
+	unsigned short PortReceived();
+	std::string AddressStringReceived();
+	
+	Status Send(OutputMemoryStream& _oms, unsigned short _portToSend);
 	void Disconnect();
 };
