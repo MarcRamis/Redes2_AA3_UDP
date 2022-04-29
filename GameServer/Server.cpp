@@ -1,21 +1,24 @@
+#include "Server.h"
 
-#include <iostream>
-#include <UdpSocket.h>
-
-#include "Constants.h"
-
-int main()
+Server::Server()
 {
-	// Init
-	std::vector<unsigned short> myClients;
-	bool isNewClient;
-	UdpSocket *socket = new UdpSocket;
+	socket = new UdpSocket;
 	socket->Bind(SERVER_IP);
+}
+
+Server::~Server()
+{
+	delete socket;
+}
+
+void Server::Update()
+{
+	bool isNewClient;
 
 	// Loop
 	while (true)
 	{
-		InputMemoryStream ims = *socket->Receive();	 
+		InputMemoryStream ims = *socket->Receive();
 		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
 			// Search if the client exists
@@ -36,13 +39,13 @@ int main()
 				std::string messageReceived, ipReceived;
 				messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
 				std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
-				
+
 				// Send Answer
 				std::string messageToSend = "Welcome " + socket->AddressStringReceived();
 				OutputMemoryStream oms;
 				oms.WriteString(messageToSend);
 				socket->Send(oms, socket->PortReceived());
-				
+
 				// Store in table
 				myClients.push_back(socket->PortReceived());
 				std::cout << "Table size: " << myClients.size() << std::endl;
@@ -70,6 +73,4 @@ int main()
 			}
 		}
 	}
-
-	return 0;
 }
