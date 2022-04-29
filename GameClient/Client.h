@@ -1,18 +1,24 @@
 #pragma once
 
-#include <iostream>
 #include <thread>
 
 #include <UdpSocket.h>
 #include "Constants.h"
+#include "ClientID.h"
 
 class Client
 {
 	UdpSocket* socket;
+	ClientID id;
 	
+	// Init
 	void WelcomeMessage();
-	void Receive();
+	void GenerateSalt();
+	void CombineSalts();
 	
+	// Receive packets
+	void Receive();
+
 public:
 	
 	Client();

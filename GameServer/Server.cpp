@@ -11,6 +11,11 @@ Server::~Server()
 	delete socket;
 }
 
+UdpSocket* Server::GetSocket()
+{
+	return socket;
+}
+
 void Server::Update()
 {
 	bool isNewClient;

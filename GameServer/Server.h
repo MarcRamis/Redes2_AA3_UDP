@@ -1,19 +1,23 @@
 #pragma once
 
-#include <iostream>
-
 #include <UdpSocket.h>
 #include "Constants.h"
+#include "ClientID.h"
 
 class Server
 {
-	std::vector<unsigned short> myClients;
 	UdpSocket* socket;
+	std::vector<ClientID> myNewClients;
+	std::vector<ClientID> myClients;
 
-
+	void GenerateSalt();
+	void CombineSalts();
+	
 public:
 	Server();
 	~Server();
+
+	UdpSocket* GetSocket();
 
 	void Update();
 };

@@ -1,27 +1,20 @@
 #pragma once
 
-#include "Selector.h"
-
-class Protocol
+static class Protocol
 {
 public:
-
-	enum class PEER_BSSProtocol
-	{
-	};
-	enum class BSS_PEERProtocol
-	{
-	};
 	
-	enum class PEER_PEERProtocol
+	// Client Headers
+	static struct C
 	{
+		static enum class WellcomeChallenge { QUESTION_ID, RESPONSE_ID };
+		static enum class WelcomeSALT {};
 	};
 
-	static struct Peer
+	// Server Headers
+	static struct S
 	{
-	};
-	static struct Server
-	{
-
+		static enum class WellcomeChallenge { RESPONSE_ID, WELCOME_ID };
+		static enum class WelcomeSALT {};
 	};
 };
