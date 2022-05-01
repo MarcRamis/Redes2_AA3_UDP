@@ -1,34 +1,6 @@
+#include "Client.h"
 
-#include <iostream>
-#include <thread>
-#include <UdpSocket.h>
-
-#include "Constants.h"
-
-void Receive(UdpSocket *socket)
-{
-	while (true)
-	{
-		InputMemoryStream* ims = socket->Receive();
-		
-		if (socket->StatusReceived().GetStatus() != Status::EStatusType::DONE)
-		{
-			std::cout << "No message" << std::endl;
-		}
-		else
-		{
-			unsigned short otherClientPort = 0;
-			std::string otherClientMessage;
-
-			ims->Read(&otherClientPort);
-			otherClientMessage = ims->ReadString();
-			
-			std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
-		}
-	}
-}
-
-void WelcomeMessage(UdpSocket* socket)
+void Client::WelcomeMessage()
 {
 	unsigned short port = CLIENT_IP_START;
 
@@ -54,17 +26,47 @@ void WelcomeMessage(UdpSocket* socket)
 	}
 }
 
-int main()
+void Client::Receive()
 {
-	UdpSocket *socket = new UdpSocket;
-	
+	while (true)
+	{
+		InputMemoryStream* ims = socket->Receive();
+
+		if (socket->StatusReceived().GetStatus() != Status::EStatusType::DONE)
+		{
+			std::cout << "No message" << std::endl;
+		}
+		else
+		{
+			unsigned short otherClientPort = 0;
+			std::string otherClientMessage;
+
+			ims->Read(&otherClientPort);
+			otherClientMessage = ims->ReadString();
+
+			std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
+		}
+	}
+}
+
+Client::Client()
+{
+	socket = new UdpSocket;
+
 	// Init
-	WelcomeMessage(socket);
-	
+	WelcomeMessage();
 	// Thread to receive messages
-	std::thread tReceive(Receive, socket);
+	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
-	
+}
+
+Client::~Client()
+{
+	delete socket;
+}
+
+void Client::Update()
+{
 	// Chat
 	std::cout << "Write a message: | 'e' to close program " << std::endl;
 	std::string message = " ";
@@ -83,8 +85,6 @@ int main()
 			// MAKE DISCONNECT
 			// ADVICE SERVER
 		}
-		
+
 	} while (message != "e");
-	
-	return 0;
 }
