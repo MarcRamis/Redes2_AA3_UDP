@@ -1,5 +1,15 @@
 #include "Server.h"
 
+bool Server::IsNewClient(ClientID _clientID)
+{
+	for (ClientID client : myNewClients)
+	{
+		if (_clientID.port == client.port) return true;
+	}
+
+	return false;
+}
+
 Server::Server()
 {
 	socket = new UdpSocket;
@@ -16,66 +26,89 @@ UdpSocket* Server::GetSocket()
 	return socket;
 }
 
+bool Server::GetServerOpen()
+{
+	return isOpen;
+}
+
 void Server::Update()
 {
-	bool isNewClient;
-
-	// Loop
-	while (true)
+	// Receive message
+	InputMemoryStream ims = *socket->Receive();
+	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 	{
-		InputMemoryStream ims = *socket->Receive();
-		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
+		// Receive header
+		int _header; ims.Read(&_header);
+		
+		// Find Header
+		switch (static_cast<Protocol::PTS>(_header))
 		{
-			// Search if the client exists
-			isNewClient = true;
-			for (unsigned short p : myClients)
+		case Protocol::PTS::HELLO_SERVER:
+		{
+			// Read the message
+			std::string messageReceived, ipReceived;
+			messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
+			unsigned int clientSalt; ims.Read(&clientSalt);		
+			std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived 
+				<< "Salt: " << clientSalt << std::endl;
+
+			// Generate Challenge
+			int challenge = GenerateChallenge();
+						
+			// Create new client
+			ClientID newClient(socket->PortReceived(), socket->AddressStringReceived(), clientSalt, challenge);
+			if (IsNewClient(newClient))
 			{
-				if (p == socket->PortReceived())
-				{
-					isNewClient = false;
-					break;
-				}
+				myNewClients.push_back(newClient);
 			}
 
-			// Receive new clients
-			if (isNewClient)
-			{
-				// Read the message
-				std::string messageReceived, ipReceived;
-				messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
-				std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
+			// Send Challenge Request
+			OutputMemoryStream oms;
+			oms.Write(Protocol::STP::CHALLENGE_REQUEST);
+			oms.Write(challenge);
+			socket->Send(oms, socket->PortReceived());
 
-				// Send Answer
-				std::string messageToSend = "Welcome " + socket->AddressStringReceived();
-				OutputMemoryStream oms;
-				oms.WriteString(messageToSend);
-				socket->Send(oms, socket->PortReceived());
-
-				// Store in table
-				myClients.push_back(socket->PortReceived());
-				std::cout << "Table size: " << myClients.size() << std::endl;
-			}
-
-			// Receive messages from the current clients connected to the server
-			else
-			{
-				// Read the message
-				std::string messageReceived = " ";
-				messageReceived = ims.ReadString();
-				std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
-
-				// Send it to the other clients
-				for (unsigned short p : myClients)
-				{
-					if (p != socket->PortReceived())
-					{
-						OutputMemoryStream oms;
-						oms.Write(socket->PortReceived());
-						oms.WriteString(messageReceived);
-						socket->Send(oms, p);
-					}
-				}
-			}
+			//// Send Answer
+			//std::string messageToSend = "Welcome " + socket->AddressStringReceived();
+			//OutputMemoryStream oms;
+			//oms.WriteString(messageToSend);
+			//socket->Send(oms, socket->PortReceived());
+			//
+			//// Store in table
+			//ClientID tmpClient(socket->PortReceived(), socket->AddressStringReceived());
+			////myClients.push_back(socket->PortReceived());
+			//myClients.push_back(tmpClient);
+			//std::cout << "Table size: " << myClients.size() << std::endl;
 		}
+
+			break;	
+
+		case Protocol::PTS::CHALLENGE_RESPONSE:
+			break;
+
+		case Protocol::PTS::CHAT:
+			break;
+		}
+
+		//// Receive messages from the current clients connected to the server
+		//else
+		//{
+		//	// Read the message
+		//	std::string messageReceived = " ";
+		//	messageReceived = ims.ReadString();
+		//	std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
+		//
+		//	// Send it to the other clients
+		//	for (unsigned short p : myClients)
+		//	{
+		//		if (p != socket->PortReceived())
+		//		{
+		//			OutputMemoryStream oms;
+		//			oms.Write(socket->PortReceived());
+		//			oms.WriteString(messageReceived);
+		//			socket->Send(oms, p);
+		//		}
+		//	}
+		//}
 	}
 }

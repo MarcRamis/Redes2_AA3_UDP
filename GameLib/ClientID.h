@@ -3,30 +3,20 @@
 #include "Port.h"
 #include "Constants.h"
 
-class ClientID
+struct ClientID
 {
-	Port port;
-	Address address;
-	int id;
-	int saltClient, saltServer;
-	int tries = 0;
+	unsigned short port;
+	std::string address;
+	std::string name;
+	
+	int challengeRequest;
+	unsigned int saltClient, saltServer;
+	int tries = TRIES_DEFAULT;
 	float timeStamp = TIMESTAMP_DEFAULT;
-
-public:
 	
 	ClientID();
-	ClientID(Port _port, Address _address);
+	ClientID(unsigned short _port, std::string _address);
+	ClientID(unsigned short _port, std::string _address, unsigned int _saltClient);
+	ClientID(unsigned short _port, std::string _address, unsigned int _saltClient, int _challengeRequest);
 	~ClientID();
-
-	Port GetPort();
-	Address GetAddress();
-	int GetId();
-	void SetSaltClient(int _newSalt);
-	int GetSaltClient();
-	void SetSaltServer(int _newSalt);
-	int GetSaltServer();
-	int GetTries();
-	void SetTries(int _tries);
-	float GetTimeStamp();
-	void SetTimeStamp(float _timeStamp);
 };

@@ -155,6 +155,7 @@
     <ClInclude Include="TcpListener.h" />
     <ClInclude Include="TcpSocket.h" />
     <ClInclude Include="UdpSocket.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientID.cpp" />

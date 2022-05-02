@@ -2,8 +2,13 @@
 
 int main()
 {
+	srand(time(NULL));
+
 	Client client;
-	client.Update();
+	while (client.GetClientOpen())
+	{
+		client.Update();
+	}
 	
 	return 0;
 }

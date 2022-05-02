@@ -2,8 +2,13 @@
 
 int main()
 {
+	srand(time(NULL));
+
 	Server server;
-	server.Update();
+	while (server.GetServerOpen())
+	{
+		server.Update();
+	}
 
 	return 0;
 }

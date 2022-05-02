@@ -9,11 +9,17 @@ void Client::WelcomeMessage()
 	{
 		port++;
 	}
+	
+	// Generate new client
+	id = ClientID(socket->GetLocalPort(), socket->GetLocalIP(), GenerateSalt());
 
 	// Send Welcome Message
 	std::string message = "Hi Server, my IP is: ";
 	OutputMemoryStream oms;
-	oms.WriteString(message); oms.WriteString(socket->GetLocalIP());
+	oms.Write(Protocol::PTS::HELLO_SERVER); // Header
+	oms.WriteString(message); oms.WriteString(id.address); // Message
+	oms.Write(id.saltClient); // Salt
+	oms.Write(id.challengeRequest); // Challenge
 	socket->Send(oms, SERVER_IP);
 
 	// Receive Welcome Message
@@ -28,23 +34,48 @@ void Client::WelcomeMessage()
 
 void Client::Receive()
 {
-	while (true)
+	while (isOpen)
 	{
-		InputMemoryStream* ims = socket->Receive();
-
-		if (socket->StatusReceived().GetStatus() != Status::EStatusType::DONE)
+		// Receive message
+		InputMemoryStream ims = *socket->Receive();
+		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
-			std::cout << "No message" << std::endl;
-		}
-		else
-		{
-			unsigned short otherClientPort = 0;
-			std::string otherClientMessage;
+			// Receive header
+			int _header; ims.Read(&_header);
+			
+			// Find header
+			switch (static_cast<Protocol::STP>(_header))
+			{
+			case Protocol::STP::CHALLENGE_REQUEST:
+			{
+				ims.Read(&id.challengeRequest);
 
-			ims->Read(&otherClientPort);
-			otherClientMessage = ims->ReadString();
+				// Make challenge
+				int challengeAnswer = -1;
+				std::cout << "Write the next number: " << id.challengeRequest << std::endl;
+				std::cin >> challengeAnswer;
+				
+				// Send challenge answer
+				OutputMemoryStream oms;
+				oms.Write(Protocol::PTS::CHALLENGE_RESPONSE);
+				oms.Write(challengeAnswer);
+				socket->Send(oms, SERVER_IP);
+				
+			}
+				break;
 
-			std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
+			case Protocol::STP::CHAT:
+			{
+				unsigned short otherClientPort = 0;
+				std::string otherClientMessage;
+
+				ims.Read(&otherClientPort);
+				otherClientMessage = ims.ReadString();
+
+				std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
+			}
+				break;
+			}
 		}
 	}
 }
@@ -87,4 +118,10 @@ void Client::Update()
 		}
 
 	} while (message != "e");
+
+}
+
+bool Client::GetClientOpen()
+{
+	return isOpen;
 }

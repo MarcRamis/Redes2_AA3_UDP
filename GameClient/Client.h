@@ -5,16 +5,17 @@
 #include <UdpSocket.h>
 #include "Constants.h"
 #include "ClientID.h"
+#include "Utils.h"
+#include "Protocol.h"
 
 class Client
 {
+	bool isOpen = true;
 	UdpSocket* socket;
 	ClientID id;
 	
 	// Init
 	void WelcomeMessage();
-	void GenerateSalt();
-	void CombineSalts();
 	
 	// Receive packets
 	void Receive();
@@ -25,6 +26,7 @@ public:
 	~Client();
 	
 	UdpSocket *GetSocket();
+	bool GetClientOpen();
 
 	void Update();
 };
