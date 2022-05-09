@@ -5,6 +5,8 @@ int main()
 	srand(time(NULL));
 
 	Client client;
+
+
 	while (client.GetClientOpen())
 	{
 		client.Update();

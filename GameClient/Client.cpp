@@ -49,6 +49,7 @@ void Client::Receive()
 			case Protocol::STP::CHALLENGE_REQUEST:
 			{
 				ims.Read(&id.challengeRequest);
+				ims.Read(&id.saltServer); //Recieve Salt Server
 
 				// Make challenge
 				int challengeAnswer = -1;
@@ -59,6 +60,7 @@ void Client::Receive()
 				OutputMemoryStream oms;
 				oms.Write(Protocol::PTS::CHALLENGE_RESPONSE);
 				oms.Write(challengeAnswer);
+				oms.Write(id.saltClient & id.saltServer); //Send Complete Salt
 				socket->Send(oms, SERVER_IP);
 				
 			}
@@ -75,6 +77,13 @@ void Client::Receive()
 				std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
 			}
 				break;
+
+			case Protocol::STP::HELLO_CLIENT:
+			{
+				std::cout << "El cliente se conecto correctamente" << std::endl;
+			}
+				break;
+
 			}
 		}
 	}

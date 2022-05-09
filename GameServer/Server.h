@@ -13,7 +13,11 @@ class Server
 	std::vector<ClientID> myNewClients;
 	std::vector<ClientID> myClients;
 	
-	bool IsNewClient(ClientID _clientID);
+	bool IsNewClient(unsigned short _clientID);
+	ClientID* SearchNewClientByPort(unsigned short _clientID);
+	ClientID* SearchNewClientBySalt(unsigned int _clientSalt);
+
+	void DeleteNewClients(ClientID _clientToDelete);
 
 public:
 	Server();

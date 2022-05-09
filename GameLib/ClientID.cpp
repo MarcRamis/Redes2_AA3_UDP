@@ -23,6 +23,15 @@ ClientID::ClientID(unsigned short _port, std::string _address, unsigned int _sal
 {
 }
 
+ClientID::ClientID(unsigned short _port, std::string _address, unsigned int _saltClient, unsigned int _saltServer, int _challengeRequest)
+	: port(_port),
+	address(_address),
+	saltClient(_saltClient),
+	saltServer(_saltServer),
+	challengeRequest(_challengeRequest)
+{
+}
+
 ClientID::~ClientID()
 {
 }

@@ -18,5 +18,6 @@ struct ClientID
 	ClientID(unsigned short _port, std::string _address);
 	ClientID(unsigned short _port, std::string _address, unsigned int _saltClient);
 	ClientID(unsigned short _port, std::string _address, unsigned int _saltClient, int _challengeRequest);
+	ClientID(unsigned short _port, std::string _address, unsigned int _saltClient, unsigned int _saltServer, int _challengeRequest);
 	~ClientID();
 };
