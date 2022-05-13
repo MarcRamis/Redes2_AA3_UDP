@@ -6,11 +6,7 @@ int main()
 
 	Client client;
 
-
-	while (client.GetClientOpen())
-	{
-		client.Update();
-	}
+	client.Update();
 	
 	return 0;
 }

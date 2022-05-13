@@ -75,7 +75,8 @@ void Server::Update()
 	{
 		// Receive header
 		int _header; ims.Read(&_header);
-		
+		std::cout << _header << std::endl;
+
 		// Find Header
 		switch (static_cast<Protocol::PTS>(_header))
 		{
@@ -96,8 +97,7 @@ void Server::Update()
 				// Create new client
 				New_Connection newClient(socket->PortReceived(), socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
 				new_con_table.push_back(newClient);
-
-				std::cout << "send" << std::endl;
+				
 				// Send New Challenge Request
 				OutputMemoryStream oms;
 				oms.Write(Protocol::STP::CHALLENGE_REQUEST);
@@ -140,11 +140,12 @@ void Server::Update()
 
 		case Protocol::PTS::CHALLENGE_RESPONSE:
 		{
+			std::cout << "xD" << std::endl;
 			int challengeResponse;
-			unsigned int salt;
+			unsigned int saltServerClient;
 			ims.Read(&challengeResponse);
-			ims.Read(&salt);
-			New_Connection myClient = *SearchNewClientBySalt(salt);
+			ims.Read(&saltServerClient);
+			New_Connection myClient = *SearchNewClientBySalt(saltServerClient);
 
 			if (myClient.challenge == challengeResponse) // Correct Challenge
 			{
@@ -180,6 +181,7 @@ void Server::Update()
 			break;
 
 		case Protocol::PTS::CHAT:
+			std::cout << "xD" << std::endl;
 			break;
 		}
 
