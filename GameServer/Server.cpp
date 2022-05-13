@@ -2,7 +2,7 @@
 
 bool Server::IsNewClient(unsigned short _clientID)
 {
-	for (ClientID client : myNewClients)
+	for (New_Connection client : new_con_table)
 	{
 		if (_clientID == client.port) return false; //If It Finds The Client It Means That It Already Existed
 	}
@@ -10,9 +10,9 @@ bool Server::IsNewClient(unsigned short _clientID)
 	return true;
 }
 
-ClientID* Server::SearchNewClientByPort(unsigned short _clientID)
+New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 {
-	for (ClientID client : myNewClients)
+	for (New_Connection client : new_con_table)
 	{
 		if (_clientID == client.port) return &client;
 	}
@@ -20,11 +20,11 @@ ClientID* Server::SearchNewClientByPort(unsigned short _clientID)
 	return nullptr;
 }
 
-ClientID* Server::SearchNewClientBySalt(unsigned int _clientSalt)
+New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 {
-	for (ClientID client : myNewClients)
+	for (New_Connection client : new_con_table)
 	{
-		unsigned int serSalt = client.saltClient & client.saltServer;
+		unsigned int serSalt = client.clientSALT & client.serverSALT;
 		if (_clientSalt = serSalt)
 		{
 			return &client;
@@ -34,16 +34,16 @@ ClientID* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 	return nullptr;
 }
 
-void Server::DeleteNewClients(ClientID _clientToDelete)
+void Server::DeleteNewClients(New_Connection _clientToDelete)
 {
 	int i = 0;
 
-	while (_clientToDelete.port != myNewClients[i].port)
+	while (_clientToDelete.port != new_con_table[i].port)
 	{
 		i++;
 	}
 
-	myNewClients.erase(myNewClients.begin() + i);
+	new_con_table.erase(new_con_table.begin() + i);
 }
 
 Server::Server()
@@ -94,26 +94,27 @@ void Server::Update()
 			if (IsNewClient(socket->PortReceived()))
 			{
 				// Create new client
-				ClientID newClient(socket->PortReceived(), socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
-				myNewClients.push_back(newClient);
+				New_Connection newClient(socket->PortReceived(), socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
+				new_con_table.push_back(newClient);
 
+				std::cout << "send" << std::endl;
 				// Send New Challenge Request
 				OutputMemoryStream oms;
 				oms.Write(Protocol::STP::CHALLENGE_REQUEST);
 				oms.Write(challenge);
-				oms.Write(newClient.saltServer); //Send Salt Server
+				oms.Write(newClient.serverSALT); //Send Salt Server
 				socket->Send(oms, socket->PortReceived());
 			}
 			else
 			{
-				// Search for already existing client
-				ClientID oldClient = *SearchNewClientByPort(socket->PortReceived());
+				// Search for already existing new client
+				New_Connection oldClient = *SearchNewClientByPort(socket->PortReceived());
 
 				// Send Same Challenge Request
 				OutputMemoryStream oms;
 				oms.Write(Protocol::STP::CHALLENGE_REQUEST);
-				oms.Write(oldClient.challengeRequest);
-				oms.Write(oldClient.saltServer); //Send Salt Server
+				oms.Write(oldClient.challenge);
+				oms.Write(oldClient.serverSALT); //Send Salt Server
 				socket->Send(oms, socket->PortReceived());
 			}
 
@@ -143,11 +144,11 @@ void Server::Update()
 			unsigned int salt;
 			ims.Read(&challengeResponse);
 			ims.Read(&salt);
-			ClientID myClient = *SearchNewClientBySalt(salt);
+			New_Connection myClient = *SearchNewClientBySalt(salt);
 
-			if (myClient.challengeRequest == challengeResponse) // Correct Challenge
+			if (myClient.challenge == challengeResponse) // Correct Challenge
 			{
-				myClients.push_back(myClient);
+				new_con_table.push_back(myClient);
 
 				DeleteNewClients(myClient);
 
@@ -158,13 +159,13 @@ void Server::Update()
 			else // Fail Challenge
 			{
 				// We see how many tries has the client
-				if (myClient.tries < 3)
+				if (myClient.TRY < 3)
 				{
 					// Send Same Challenge Request
 					OutputMemoryStream oms;
 					oms.Write(Protocol::STP::CHALLENGE_REQUEST);
-					oms.Write(myClient.challengeRequest);
-					oms.Write(myClient.saltServer); //Send Salt Server
+					oms.Write(myClient.challenge);
+					oms.Write(myClient.serverSALT); //Send Salt Server
 					socket->Send(oms, myClient.port);
 				}
 				else //We Delete The Client

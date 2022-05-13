@@ -11,25 +11,25 @@ void Client::WelcomeMessage()
 	}
 	
 	// Generate new client
-	id = ClientID(socket->GetLocalPort(), socket->GetLocalIP(), GenerateSalt());
+	new_con = new New_Connection(socket->GetLocalPort(), socket->GetLocalIP(), GenerateSalt());
 
 	// Send Welcome Message
 	std::string message = "Hi Server, my IP is: ";
 	OutputMemoryStream oms;
 	oms.Write(Protocol::PTS::HELLO_SERVER); // Header
-	oms.WriteString(message); oms.WriteString(id.address); // Message
-	oms.Write(id.saltClient); // Salt
-	oms.Write(id.challengeRequest); // Challenge
+	oms.WriteString(message); oms.WriteString(new_con->address); // Message
+	oms.Write(new_con->clientSALT); // Salt
+	oms.Write(new_con->challenge); // Challenge
 	socket->Send(oms, SERVER_IP);
 
 	// Receive Welcome Message
-	InputMemoryStream ims = *socket->Receive();
-	std::string messageReceived;
-	messageReceived = ims.ReadString();
-	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
-	{
-		std::cout << socket->AddressStringReceived() << " tells: " << messageReceived << std::endl;
-	}
+	//InputMemoryStream ims = *socket->Receive();
+	//std::string messageReceived;
+	//messageReceived = ims.ReadString();
+	//if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
+	//{
+	//	std::cout << socket->AddressStringReceived() << " tells: " << messageReceived << std::endl;
+	//}
 }
 
 void Client::Receive()
@@ -48,19 +48,20 @@ void Client::Receive()
 			{
 			case Protocol::STP::CHALLENGE_REQUEST:
 			{
-				ims.Read(&id.challengeRequest);
-				ims.Read(&id.saltServer); //Recieve Salt Server
+				std::cout << "xD" << std::endl;
+				ims.Read(&new_con->challenge);
+				ims.Read(&new_con->serverSALT); //Recieve Salt Server
 
 				// Make challenge
 				int challengeAnswer = -1;
-				std::cout << "Write the next number: " << id.challengeRequest << std::endl;
+				std::cout << "Write the next number: " << new_con->challenge << std::endl;
 				std::cin >> challengeAnswer;
 				
 				// Send challenge answer
 				OutputMemoryStream oms;
 				oms.Write(Protocol::PTS::CHALLENGE_RESPONSE);
 				oms.Write(challengeAnswer);
-				oms.Write(id.saltClient & id.saltServer); //Send Complete Salt
+				oms.Write(new_con->clientSALT & new_con->serverSALT); //Send Complete Salt
 				socket->Send(oms, SERVER_IP);
 				
 			}

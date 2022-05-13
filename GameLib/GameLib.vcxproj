@@ -143,7 +143,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientID.h" />
+    <ClInclude Include="Tables.h" />
     <ClInclude Include="ConsoleControl.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="InputMemoryStream.h" />
@@ -158,7 +158,7 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClientID.cpp" />
+    <ClCompile Include="Tables.cpp" />
     <ClCompile Include="ConsoleControl.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Status.cpp" />

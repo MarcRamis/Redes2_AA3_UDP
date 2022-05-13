@@ -4,7 +4,7 @@
 
 #include <UdpSocket.h>
 #include "Constants.h"
-#include "ClientID.h"
+#include "Tables.h"
 #include "Utils.h"
 #include "Protocol.h"
 
@@ -12,7 +12,8 @@ class Client
 {
 	bool isOpen = true;
 	UdpSocket* socket;
-	ClientID id;
+	New_Connection* new_con;
+	Active_Connection *active_con;
 	
 	// Init
 	void WelcomeMessage();

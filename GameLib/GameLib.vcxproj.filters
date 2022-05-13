@@ -51,7 +51,7 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientID.h">
+    <ClInclude Include="Tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
@@ -77,7 +77,7 @@
     <ClCompile Include="UdpSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClientID.cpp">
+    <ClCompile Include="Tables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
