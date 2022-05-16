@@ -7,29 +7,28 @@
 #include "Tables.h"
 #include "Utils.h"
 #include "Protocol.h"
+#include "Timer.h"
 
 class Client
 {
-	
-
 	bool isOpen = true;
 	UdpSocket* socket;
 	New_Connection* new_con;
 	Active_Connection *active_con;
 	
-	enum class MessageState { CHAT, CHALLENGE };
-	MessageState messageState = MessageState::CHAT;
 	std::string message;
-
 	
+	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, CHAT, GAME};
+	EPhase phase = EPhase::REQUEST_CON;
+
 	// Init
 	void WelcomeMessage();
 	
 	// Receive packets
 	void Receive();
 
-	// Chat
-	void SendMessage();
+	// Request Connection 
+	void RequestConnection();
 
 public:
 	

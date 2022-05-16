@@ -18,3 +18,18 @@ New_Connection::New_Connection(unsigned short _port, std::string _address, int _
 New_Connection::~New_Connection()
 {
 }
+
+Active_Connection::Active_Connection()
+{
+
+}
+Active_Connection::~Active_Connection()
+{
+
+}
+
+Active_Connection::Active_Connection(unsigned short _port, std::string _address, int _clientSALT, int _serverSALT) 
+	: port(_port), address(_address), clientSALT(_clientSALT), serverSALT(_serverSALT)
+{
+
+}

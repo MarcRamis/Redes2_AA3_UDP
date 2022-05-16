@@ -10,8 +10,8 @@ struct New_Connection {
 	int challenge;
 	int clientSALT;
 	int serverSALT;
-	int TS = TRIES_DEFAULT; // Almacena el TS del hello
-	int TRY;
+	int TS = TIMESTAMP_DEFAULT; // Almacena el TS del hello
+	int TRY = TRIES_DEFAULT;
 
 	New_Connection();
 	~New_Connection();
@@ -28,7 +28,9 @@ struct Active_Connection {
 	int TS = TIMESTAMP_DEFAULT; // Almacena el TS del último pkt recibido
 	int PacketID; // ID del último pkt enviado
 	int RemoteID; // ID del último pkt enviado
-
+	Active_Connection(unsigned short _port, std::string _address, int _clientSALT, int _serverSALT);
+	~Active_Connection();
+	Active_Connection();
 };
 
 struct Pack_No_Ack{

@@ -13,100 +13,90 @@ void Client::WelcomeMessage()
 	// Generate new client
 	new_con = new New_Connection(socket->GetLocalPort(), socket->GetLocalIP(), GenerateSalt());
 	
-	// Send welcome message to Server
-	std::string message = "Hi Server, my IP is: ";
-	OutputMemoryStream oms;
-	oms.Write(Protocol::PTS::HELLO_SERVER); // Header
-	oms.WriteString(message); oms.WriteString(new_con->address); // Message
-	oms.Write(new_con->clientSALT); // Salt
-	oms.Write(new_con->challenge); // Challenge
-	socket->Send(oms, SERVER_IP);
-	
-	// Receive welcome message from Server after passing all anti-hacking tests
-	//InputMemoryStream ims = *socket->Receive();
-	//std::string messageReceived;
-	//messageReceived = ims.ReadString();
-	//if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
-	//{
-	//	std::cout << socket->AddressStringReceived() << " tells: " << messageReceived << std::endl;
-	//}
-}
-
-void Client::Chat()
-{
-	// Chat
-	std::cout << "Write a message: | 'e' to close program " << std::endl;
-	std::string message = " ";
-
-	if (message.size() > 0) {
-
-		if (message != "e")
-		{
-			OutputMemoryStream oms;
-			oms.WriteString(message);
-			socket->Send(oms, SERVER_IP);
-		}
-		else
-		{
-			// MAKE DISCONNECT
-			// ADVICE SERVER
-		}
-		message.clear();
-	}
+	// Send welcome message to Server (to make server know that this client exists)
+	std::thread tRequestCon(&Client::RequestConnection, this);
+	tRequestCon.detach();
 }
 
 void Client::Receive()
 {
-	// Receive message
-	InputMemoryStream ims = *socket->Receive();
-	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
+	while (isOpen)
 	{
-		// Receive header
-		int _header; ims.Read(&_header);
-
-		// Find header
-		switch (static_cast<Protocol::STP>(_header))
+		// Receive message
+		InputMemoryStream ims = *socket->Receive();
+		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
-		case Protocol::STP::CHALLENGE_REQUEST:
+			// Receive header
+			int _header; ims.Read(&_header);
+
+			// Find header
+			switch (static_cast<Protocol::STP>(_header))
+			{
+			case Protocol::STP::CHALLENGE_REQUEST:
+			{
+				phase = EPhase::CHALLENGE_RECEIVED;
+
+				ims.Read(&new_con->challenge);
+				ims.Read(&new_con->serverSALT); // Receive Salt Server
+
+				// Make challenge
+				int challengeAnswer = -1;
+				
+				std::cout << "CONNECTING TO THE SERVER" << std::endl;
+				std::cout << "Write the next number: " << new_con->challenge << std::endl;
+				
+				auto future = std::async(std::launch::async, GetLineFromCin);
+				challengeAnswer = stoi(future.get());
+
+				// Send challenge answer
+				OutputMemoryStream oms;
+				oms.Write(Protocol::PTS::CHALLENGE_RESPONSE);
+				oms.Write(challengeAnswer);
+				oms.Write(new_con->clientSALT & new_con->serverSALT); // Send Complete Salt
+				socket->Send(oms, SERVER_IP);
+			}
+			break;
+
+			case Protocol::STP::CHAT:
+			{
+				unsigned short otherClientPort = 0;
+				std::string otherClientMessage;
+
+				ims.Read(&otherClientPort);
+				otherClientMessage = ims.ReadString();
+
+				std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
+			}
+			break;
+			
+			case Protocol::STP::HELLO_CLIENT:
+			{
+				phase = EPhase::CHAT;
+				std::cout << "Connected successfully. " << std::endl;
+			}
+			break;
+
+			}
+		}
+	}
+}
+
+void Client::RequestConnection()
+{
+	Timer timer; timer.Start();
+	while (phase == EPhase::REQUEST_CON)
+	{
+		if (timer.ElapsedSeconds() > 0.35f)
 		{
-			ims.Read(&new_con->challenge);
-			ims.Read(&new_con->serverSALT); //Recieve Salt Server
-
-			// Make challenge
-			int challengeAnswer = -1;
-			std::cout << "Write the next number: " << new_con->challenge << std::endl;
-			std::cin >> challengeAnswer;
-
-			// Send challenge answer
+			std::string message = "Hi Server, my IP is: ";
 			OutputMemoryStream oms;
-			int x = static_cast<int>(Protocol::PTS::CHALLENGE_RESPONSE);
-			std::cout << x << std::endl;
-			oms.Write(Protocol::PTS::CHALLENGE_RESPONSE);
-			oms.Write(challengeAnswer);
-			oms.Write(new_con->clientSALT & new_con->serverSALT); //Send Complete Salt
+			oms.Write(Protocol::PTS::HELLO_SERVER); // Header
+			oms.WriteString(message); oms.WriteString(new_con->address); // Message
+			oms.Write(new_con->clientSALT); // Salt
+			oms.Write(new_con->challenge); // Challenge
 			socket->Send(oms, SERVER_IP);
 
-		}
-		break;
-
-		case Protocol::STP::CHAT:
-		{
-			unsigned short otherClientPort = 0;
-			std::string otherClientMessage;
-
-			ims.Read(&otherClientPort);
-			otherClientMessage = ims.ReadString();
-
-			std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
-		}
-		break;
-
-		case Protocol::STP::HELLO_CLIENT:
-		{
-			std::cout << "El cliente se conecto correctamente" << std::endl;
-		}
-		break;
-
+			timer.Start();
 		}
 	}
 }
@@ -117,6 +107,10 @@ Client::Client()
 
 	// Init
 	WelcomeMessage();
+
+	// Thread to receive messages
+	std::thread tReceive(&Client::Receive, this);
+	tReceive.detach();
 }
 
 Client::~Client()
@@ -126,38 +120,34 @@ Client::~Client()
 
 void Client::Update()
 {
-	while (isOpen)
+	if (phase == EPhase::CHAT)
 	{
 		if (message.size() > 0) {
 
 			if (message != "e")
 			{
-				if (messageState == MessageState::CHAT)
-				{
-					OutputMemoryStream oms;
-					oms.WriteString(message);
-					socket->Send(oms, SERVER_IP);
-				}
+				OutputMemoryStream oms;
+				oms.Write(Protocol::PTS::CHAT);
+				oms.WriteString(message);
+				socket->Send(oms, SERVER_IP);
 			}
 			else
 			{
+				isOpen = false;
 				// MAKE DISCONNECT
 				// ADVICE SERVER
 			}
 			message.clear();
 		}
-	
+
+		std::cout << "CHAT" << std::endl;
+		std::cout << "Write something | 'e' to close program" << std::endl;
 		auto future = std::async(std::launch::async, GetLineFromCin);
 		message = future.get();
-		
+
 		std::cout << "waiting..." << std::endl;
 		std::this_thread::sleep_for(std::chrono::seconds(1));
-
-		Receive();
 	}
-
-
-	
 }
 
 bool Client::GetClientOpen()

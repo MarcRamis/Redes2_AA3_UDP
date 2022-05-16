@@ -154,6 +154,7 @@
     <ClInclude Include="Status.h" />
     <ClInclude Include="TcpListener.h" />
     <ClInclude Include="TcpSocket.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="UdpSocket.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
@@ -164,6 +165,7 @@
     <ClCompile Include="Status.cpp" />
     <ClCompile Include="TcpListener.cpp" />
     <ClCompile Include="TcpSocket.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="UdpSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

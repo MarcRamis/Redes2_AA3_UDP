@@ -10,8 +10,8 @@ class Server
 {
 	bool isOpen = true;
 	UdpSocket* socket;
-	std::vector<New_Connection> new_con_table;
-	std::vector<Active_Connection> active_con_table;
+	std::vector<New_Connection*> new_con_table;
+	std::vector<Active_Connection*> active_con_table;
 	
 	bool IsNewClient(unsigned short _clientID);
 	New_Connection* SearchNewClientByPort(unsigned short _clientID);

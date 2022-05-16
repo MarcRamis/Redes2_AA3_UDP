@@ -2,9 +2,9 @@
 
 bool Server::IsNewClient(unsigned short _clientID)
 {
-	for (New_Connection client : new_con_table)
+	for (New_Connection *client : new_con_table)
 	{
-		if (_clientID == client.port) return false; //If It Finds The Client It Means That It Already Existed
+		if (_clientID == client->port) return false; //If It Finds The Client It Means That It Already Existed
 	}
 
 	return true;
@@ -12,9 +12,9 @@ bool Server::IsNewClient(unsigned short _clientID)
 
 New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 {
-	for (New_Connection client : new_con_table)
+	for (New_Connection *client : new_con_table)
 	{
-		if (_clientID == client.port) return &client;
+		if (_clientID == client->port) return client;
 	}
 
 	return nullptr;
@@ -22,12 +22,12 @@ New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 
 New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 {
-	for (New_Connection client : new_con_table)
+	for (New_Connection *client : new_con_table)
 	{
-		unsigned int serSalt = client.clientSALT & client.serverSALT;
-		if (_clientSalt = serSalt)
+		unsigned int serSalt = client->clientSALT & client->serverSALT;
+		if (_clientSalt == serSalt)
 		{
-			return &client;
+			return client;
 		}
 	}
 	
@@ -38,7 +38,7 @@ void Server::DeleteNewClients(New_Connection _clientToDelete)
 {
 	int i = 0;
 
-	while (_clientToDelete.port != new_con_table[i].port)
+	while (_clientToDelete.port != new_con_table[i]->port)
 	{
 		i++;
 	}
@@ -75,7 +75,6 @@ void Server::Update()
 	{
 		// Receive header
 		int _header; ims.Read(&_header);
-		std::cout << _header << std::endl;
 
 		// Find Header
 		switch (static_cast<Protocol::PTS>(_header))
@@ -86,8 +85,7 @@ void Server::Update()
 			std::string messageReceived, ipReceived;
 			messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
 			unsigned int clientSalt; ims.Read(&clientSalt);		
-			std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived 
-				<< "Salt: " << clientSalt << std::endl;
+			std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
 
 			// Generate Challenge
 			int challenge = GenerateChallenge();
@@ -95,14 +93,15 @@ void Server::Update()
 			if (IsNewClient(socket->PortReceived()))
 			{
 				// Create new client
-				New_Connection newClient(socket->PortReceived(), socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
+				New_Connection *newClient = new New_Connection(socket->PortReceived(), 
+					socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
 				new_con_table.push_back(newClient);
 				
 				// Send New Challenge Request
 				OutputMemoryStream oms;
 				oms.Write(Protocol::STP::CHALLENGE_REQUEST);
 				oms.Write(challenge);
-				oms.Write(newClient.serverSALT); //Send Salt Server
+				oms.Write(newClient->serverSALT); //Send Salt Server
 				socket->Send(oms, socket->PortReceived());
 			}
 			else
@@ -117,93 +116,78 @@ void Server::Update()
 				oms.Write(oldClient.serverSALT); //Send Salt Server
 				socket->Send(oms, socket->PortReceived());
 			}
-
-			
-			
-
-			
-
-			//// Send Answer
-			//std::string messageToSend = "Welcome " + socket->AddressStringReceived();
-			//OutputMemoryStream oms;
-			//oms.WriteString(messageToSend);
-			//socket->Send(oms, socket->PortReceived());
-			//
-			//// Store in table
-			//ClientID tmpClient(socket->PortReceived(), socket->AddressStringReceived());
-			////myClients.push_back(socket->PortReceived());
-			//myClients.push_back(tmpClient);
-			//std::cout << "Table size: " << myClients.size() << std::endl;
 		}
 
 			break;	
 
 		case Protocol::PTS::CHALLENGE_RESPONSE:
 		{
-			std::cout << "xD" << std::endl;
+			// Receive challenge answer
 			int challengeResponse;
 			unsigned int saltServerClient;
 			ims.Read(&challengeResponse);
 			ims.Read(&saltServerClient);
-			New_Connection myClient = *SearchNewClientBySalt(saltServerClient);
-
-			if (myClient.challenge == challengeResponse) // Correct Challenge
+			
+			// Identify client
+			New_Connection *myClient = SearchNewClientBySalt(saltServerClient);
+			// Challenge answer is correct
+			if (myClient->challenge == challengeResponse)
 			{
-				new_con_table.push_back(myClient);
-
-				DeleteNewClients(myClient);
-
+				// Store the new client into active client
+				Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
+				active_con_table.push_back(act_con);
+				// Delete it from the new clients
+				DeleteNewClients(*myClient);
+			
+				// Send hello message to the client
 				OutputMemoryStream oms;
 				oms.Write(Protocol::STP::HELLO_CLIENT);
-				socket->Send(oms, myClient.port);
+				socket->Send(oms, myClient->port);
 			}
-			else // Fail Challenge
+			// Challenge answer is wrong
+			else
 			{
-				// We see how many tries has the client
-				if (myClient.TRY < 3)
+				myClient->TRY--; // Rest try
+				std::cout << SearchNewClientBySalt(saltServerClient)->TRY << std::endl;
+				// Check Tries
+				if (myClient->TRY > 0)
 				{
 					// Send Same Challenge Request
 					OutputMemoryStream oms;
 					oms.Write(Protocol::STP::CHALLENGE_REQUEST);
-					oms.Write(myClient.challenge);
-					oms.Write(myClient.serverSALT); //Send Salt Server
-					socket->Send(oms, myClient.port);
+					oms.Write(myClient->challenge);
+					oms.Write(myClient->serverSALT); //Send Salt Server
+					socket->Send(oms, myClient->port);
 				}
-				else //We Delete The Client
+				else //We delete the client
 				{
-					DeleteNewClients(myClient);
+					DeleteNewClients(*myClient);
 				}
-
-
 			}
 		}
 			
 			break;
 
 		case Protocol::PTS::CHAT:
-			std::cout << "xD" << std::endl;
+
+			// Read the message
+			std::string messageReceived = " ";
+			messageReceived = ims.ReadString();
+			std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
+
+			// Send it to other clients
+			for (Active_Connection *p : active_con_table)
+			{
+				if (p->port != socket->PortReceived())
+				{
+					OutputMemoryStream oms;
+					oms.Write(Protocol::STP::CHAT);
+					oms.Write(socket->PortReceived());
+					oms.WriteString(messageReceived);
+					socket->Send(oms, p->port);
+				}
+			}
 			break;
 		}
-
-		//// Receive messages from the current clients connected to the server
-		//else
-		//{
-		//	// Read the message
-		//	std::string messageReceived = " ";
-		//	messageReceived = ims.ReadString();
-		//	std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
-		//
-		//	// Send it to the other clients
-		//	for (unsigned short p : myClients)
-		//	{
-		//		if (p != socket->PortReceived())
-		//		{
-		//			OutputMemoryStream oms;
-		//			oms.Write(socket->PortReceived());
-		//			oms.WriteString(messageReceived);
-		//			socket->Send(oms, p);
-		//		}
-		//	}
-		//}
 	}
 }

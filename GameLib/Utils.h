@@ -6,7 +6,6 @@
 
 static std::string GetLineFromCin() {
 
-	std::cout << "Write a message: | 'e' to close program " << std::endl;
 	std::string line;
 	std::getline(std::cin, line);
 	return line;
