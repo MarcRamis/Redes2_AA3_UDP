@@ -15,9 +15,13 @@ class Server
 	
 	bool IsNewClient(unsigned short _clientID);
 	New_Connection* SearchNewClientByPort(unsigned short _clientID);
+	Active_Connection* SearchActiveClientByPort(unsigned short _clientID);
 	New_Connection* SearchNewClientBySalt(unsigned int _clientSalt);
 
 	void DeleteNewClients(New_Connection _clientToDelete);
+	void DeleteActiveClients(Active_Connection _clientToDelete);
+
+	void DisconnectClient();
 
 public:
 	Server();

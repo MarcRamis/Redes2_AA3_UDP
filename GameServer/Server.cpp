@@ -20,6 +20,16 @@ New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 	return nullptr;
 }
 
+Active_Connection* Server::SearchActiveClientByPort(unsigned short _clientID)
+{
+	for (Active_Connection* client : active_con_table)
+	{
+		if (_clientID == client->port) return client;
+	}
+
+	return nullptr;
+}
+
 New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 {
 	for (New_Connection *client : new_con_table)
@@ -45,6 +55,52 @@ void Server::DeleteNewClients(New_Connection _clientToDelete)
 
 	new_con_table.erase(new_con_table.begin() + i);
 }
+
+void Server::DeleteActiveClients(Active_Connection _clientToDelete)
+{
+	int i = 0;
+
+	while (_clientToDelete.port != active_con_table[i]->port)
+	{
+		i++;
+	}
+
+	active_con_table.erase(active_con_table.begin() + i);
+}
+
+void Server::DisconnectClient()
+{
+	// Disconnects a new client
+	if (!IsNewClient(socket->PortReceived()))
+	{
+		DeleteNewClients(*SearchNewClientByPort(socket->PortReceived()));
+		std::cout << "Deleted the client with port: " << socket->PortReceived() << std::endl;
+	}
+	// Disconnects an active client
+	else
+	{
+		// Send a message to other clients to let them know a player disconnected
+		for (Active_Connection* p : active_con_table)
+		{
+			if (p->port != socket->PortReceived())
+			{
+				OutputMemoryStream oms;
+				std::string messageDisconnect = "--The player with salt: " +
+					std::to_string(SearchActiveClientByPort(socket->PortReceived())->clientSALT
+						& SearchActiveClientByPort(socket->PortReceived())->serverSALT) + " has been disconnected--";
+				oms.Write(Protocol::STP::CHAT);
+				oms.Write(socket->PortReceived());
+				oms.WriteString(messageDisconnect);
+				socket->Send(oms, p->port);
+			}
+		}
+
+		DeleteActiveClients(*SearchActiveClientByPort(socket->PortReceived()));
+		std::cout << "Deleted the client with port: " << socket->PortReceived() << std::endl;
+	}
+}
+
+
 
 Server::Server()
 {
@@ -142,7 +198,8 @@ void Server::Update()
 				// Send hello message to the client
 				OutputMemoryStream oms;
 				oms.Write(Protocol::STP::HELLO_CLIENT);
-				socket->Send(oms, myClient->port);
+				oms.WriteString("Hello client, welcome to the matrix. ");
+				socket->Send(oms, myClient->port); 
 			}
 			// Challenge answer is wrong
 			else
@@ -169,14 +226,14 @@ void Server::Update()
 			break;
 
 		case Protocol::PTS::CHAT:
-
+		{
 			// Read the message
 			std::string messageReceived = " ";
 			messageReceived = ims.ReadString();
 			std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
 
 			// Send it to other clients
-			for (Active_Connection *p : active_con_table)
+			for (Active_Connection* p : active_con_table)
 			{
 				if (p->port != socket->PortReceived())
 				{
@@ -187,7 +244,14 @@ void Server::Update()
 					socket->Send(oms, p->port);
 				}
 			}
+		}
+			break;
+		case Protocol::PTS::DISCONNECT_CLIENT:
+
+			DisconnectClient();
 			break;
 		}
+
+
 	}
 }

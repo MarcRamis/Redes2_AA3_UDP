@@ -42,10 +42,12 @@ void Client::Receive()
 				// Make challenge
 				int challengeAnswer = -1;
 				
-				std::cout << "CONNECTING TO THE SERVER" << std::endl;
+				std::cout << "CONNECTING TO THE SERVER" << std::endl;;
+				//std::cout << " | 'e' to exit" << std::endl;
 				std::cout << "Write the next number: " << new_con->challenge << std::endl;
 				
 				auto future = std::async(std::launch::async, GetLineFromCin);
+				//DisconnectFromGetline(future.get());
 				challengeAnswer = stoi(future.get());
 
 				// Send challenge answer
@@ -59,12 +61,8 @@ void Client::Receive()
 
 			case Protocol::STP::CHAT:
 			{
-				unsigned short otherClientPort = 0;
-				std::string otherClientMessage;
-
-				ims.Read(&otherClientPort);
-				otherClientMessage = ims.ReadString();
-
+				unsigned short otherClientPort = 0; std::string otherClientMessage;
+				ims.Read(&otherClientPort); otherClientMessage = ims.ReadString();
 				std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
 			}
 			break;
@@ -72,9 +70,15 @@ void Client::Receive()
 			case Protocol::STP::HELLO_CLIENT:
 			{
 				phase = EPhase::CHAT;
-				std::cout << "Connected successfully. " << std::endl;
+				std::string helloMessage = ims.ReadString();
+				std::cout << helloMessage << std::endl;
 			}
 			break;
+			case Protocol::STP::DISCONNECT_CLIENT:
+				
+				std::cout << "You are being disconnected... Bye bye ~~" << std::endl;
+				Disconnect();
+				break;
 
 			}
 		}
@@ -86,7 +90,8 @@ void Client::RequestConnection()
 	Timer timer; timer.Start();
 	while (phase == EPhase::REQUEST_CON)
 	{
-		if (timer.ElapsedSeconds() > 0.35f)
+		// Request message every { X } ms
+		if (timer.ElapsedSeconds() > REQ_CON_MS)
 		{
 			std::string message = "Hi Server, my IP is: ";
 			OutputMemoryStream oms;
@@ -99,6 +104,26 @@ void Client::RequestConnection()
 			timer.Start();
 		}
 	}
+}
+
+void Client::DisconnectFromGetline(std::string text)
+{
+	if (text == "e") Disconnect();
+}
+
+void Client::Disconnect()
+{
+	// Advice server
+	OutputMemoryStream oms;
+	oms.Write(Protocol::PTS::DISCONNECT_CLIENT);
+	socket->Send(oms, SERVER_IP);
+	
+	// Clean memory
+	socket->Disconnect();
+	delete socket;
+	delete new_con;
+	delete active_con;
+	isOpen = false;
 }
 
 Client::Client()
@@ -115,38 +140,32 @@ Client::Client()
 
 Client::~Client()
 {
-	delete socket;
+	Disconnect();
 }
 
 void Client::Update()
 {
 	if (phase == EPhase::CHAT)
 	{
-		if (message.size() > 0) {
-
-			if (message != "e")
-			{
-				OutputMemoryStream oms;
-				oms.Write(Protocol::PTS::CHAT);
-				oms.WriteString(message);
-				socket->Send(oms, SERVER_IP);
-			}
-			else
-			{
-				isOpen = false;
-				// MAKE DISCONNECT
-				// ADVICE SERVER
-			}
-			message.clear();
-		}
-
 		std::cout << "CHAT" << std::endl;
-		std::cout << "Write something | 'e' to close program" << std::endl;
+		std::cout << "Write something";
+		std::cout << " | 'e' to exit" << std::endl;
 		auto future = std::async(std::launch::async, GetLineFromCin);
 		message = future.get();
 
 		std::cout << "waiting..." << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		if (message.size() > 0) {
+
+			OutputMemoryStream oms;
+			oms.Write(Protocol::PTS::CHAT);
+			oms.WriteString(message);
+			socket->Send(oms, SERVER_IP);
+
+			DisconnectFromGetline(message);
+			message.clear();
+		}
 	}
 }
 

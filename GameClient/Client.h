@@ -30,6 +30,10 @@ class Client
 	// Request Connection 
 	void RequestConnection();
 
+	// Disconnect
+	void DisconnectFromGetline(std::string text);
+	void Disconnect();
+
 public:
 	
 	Client();

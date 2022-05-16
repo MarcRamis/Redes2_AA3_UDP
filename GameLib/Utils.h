@@ -11,6 +11,13 @@ static std::string GetLineFromCin() {
 	return line;
 }
 
+static int GetLineFromCinInt() {
+
+	int line;
+	std::cin >> line;
+	return line;
+}
+
 static unsigned int GenerateSalt()
 {
 	unsigned int x;
