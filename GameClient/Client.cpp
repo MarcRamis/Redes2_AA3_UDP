@@ -133,6 +133,12 @@ Client::Client()
 	// Init
 	WelcomeMessage();
 
+	//Init SFML draw
+	draw = new SFML_Draw();
+	draw->AddSquare(150.0f, 150.0f);
+	//std::thread tDraw(Client::draw->UpdateWindow);
+	//tDraw.detach();
+
 	// Thread to receive messages
 	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
