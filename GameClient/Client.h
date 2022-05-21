@@ -8,7 +8,7 @@
 #include "Utils.h"
 #include "Protocol.h"
 #include "Timer.h"
-#include "SFML_Draw.h"
+#include "Player.h"
 
 class Client
 {
@@ -21,9 +21,9 @@ class Client
 	
 	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, CHAT, GAME};
 	EPhase phase = EPhase::REQUEST_CON;
-
-	//SFML Draw Game
-	SFML_Draw* draw;
+	
+	// Player
+	//Player *player = new Player;
 
 	// Init
 	void WelcomeMessage();
