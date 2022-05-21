@@ -143,6 +143,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SFML_Draw.h" />
     <ClInclude Include="Tables.h" />
     <ClInclude Include="ConsoleControl.h" />
     <ClInclude Include="Constants.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SFML_Draw.cpp" />
     <ClCompile Include="Tables.cpp" />
     <ClCompile Include="ConsoleControl.cpp" />
     <ClCompile Include="Selector.cpp" />
