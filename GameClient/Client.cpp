@@ -120,9 +120,9 @@ void Client::Disconnect()
 	
 	// Clean memory
 	socket->Disconnect();
-	delete socket;
-	delete new_con;
-	delete active_con;
+	if (socket != nullptr) delete socket;
+	if (new_con != nullptr) delete new_con;
+	if (active_con != nullptr) delete active_con;
 	isOpen = false;
 }
 
@@ -134,8 +134,8 @@ Client::Client()
 	WelcomeMessage();
 
 	//Init SFML draw
-	draw = new SFML_Draw();
-	draw->AddSquare(150.0f, 150.0f);
+	//draw = new SFML_Draw();
+	//draw->AddSquare(150.0f, 150.0f);
 	//std::thread tDraw(Client::draw->UpdateWindow);
 	//tDraw.detach();
 

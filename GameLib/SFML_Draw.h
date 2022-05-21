@@ -6,7 +6,6 @@
 class SFML_Draw
 {
 	sf::RenderWindow* window;
-
 	std::vector<sf::RectangleShape> squares;
 
 public:

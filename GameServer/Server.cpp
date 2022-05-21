@@ -30,6 +30,21 @@ Active_Connection* Server::SearchActiveClientByPort(unsigned short _clientID)
 	return nullptr;
 }
 
+Active_Connection* Server::SearchActiveClientBySalt(unsigned int _clientCombSalt)
+{
+	for (Active_Connection* client : active_con_table)
+	{
+		unsigned int combSalt = client->clientSALT & client->serverSALT;
+		if (_clientCombSalt == combSalt)
+		{
+			return client;
+		}
+	}
+
+	return nullptr;
+}
+
+
 New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 {
 	for (New_Connection *client : new_con_table)
@@ -84,14 +99,12 @@ void Server::DisconnectClient()
 		{
 			if (p->port != socket->PortReceived())
 			{
-				OutputMemoryStream oms;
 				std::string messageDisconnect = "--The player with salt: " +
 					std::to_string(SearchActiveClientByPort(socket->PortReceived())->clientSALT
 						& SearchActiveClientByPort(socket->PortReceived())->serverSALT) + " has been disconnected--";
-				oms.Write(Protocol::STP::CHAT);
-				oms.Write(socket->PortReceived());
-				oms.WriteString(messageDisconnect);
-				socket->Send(oms, p->port);
+				
+				Protocol::Send(socket, Protocol::STP::CHAT, p->port, 
+					messageDisconnect, socket->PortReceived());
 			}
 		}
 		
@@ -100,8 +113,6 @@ void Server::DisconnectClient()
 		std::cout << "Deleted the client with port: " << socket->PortReceived() << std::endl;
 	}
 }
-
-
 
 Server::Server()
 {
@@ -132,7 +143,7 @@ void Server::Update()
 	{
 		// Receive header
 		int _header; ims.Read(&_header);
-
+		
 		// Find Header
 		switch (static_cast<Protocol::PTS>(_header))
 		{
@@ -155,28 +166,25 @@ void Server::Update()
 				new_con_table.push_back(newClient);
 				
 				// Send New Challenge Request
-				OutputMemoryStream oms;
-				oms.Write(Protocol::STP::CHALLENGE_REQUEST);
-				oms.Write(challenge);
-				oms.Write(newClient->serverSALT); //Send Salt Server
-				socket->Send(oms, socket->PortReceived());
+				Protocol::Send(socket, Protocol::STP::CHALLENGE_REQUEST, socket->PortReceived(),
+					challenge, newClient->serverSALT);
 			}
 			else
 			{
 				// Search for already existing new client
-				New_Connection oldClient = *SearchNewClientByPort(socket->PortReceived());
+				New_Connection *oldClient = SearchNewClientByPort(socket->PortReceived());
 
-				// Send Same Challenge Request
-				OutputMemoryStream oms;
-				oms.Write(Protocol::STP::CHALLENGE_REQUEST);
-				oms.Write(oldClient.challenge);
-				oms.Write(oldClient.serverSALT); //Send Salt Server
-				socket->Send(oms, socket->PortReceived());
+				if (oldClient != nullptr)
+				{
+					// Send Same Challenge Request
+					Protocol::Send(socket, Protocol::STP::CHALLENGE_REQUEST, socket->PortReceived(),
+						oldClient->challenge, oldClient->serverSALT);
+				}
 			}
 		}
 
 			break;	
-
+			
 		case Protocol::PTS::CHALLENGE_RESPONSE:
 		{
 			// Receive challenge answer
@@ -187,39 +195,39 @@ void Server::Update()
 			
 			// Identify client
 			New_Connection *myClient = SearchNewClientBySalt(saltServerClient);
-			// Challenge answer is correct
-			if (myClient->challenge == challengeResponse)
+
+			if (myClient != nullptr)
 			{
-				// Store the new client into active client
-				Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
-				active_con_table.push_back(act_con);
-				// Delete it from the new clients
-				DeleteNewClients(*myClient);
-			
-				// Send hello message to the client
-				OutputMemoryStream oms;
-				oms.Write(Protocol::STP::HELLO_CLIENT);
-				oms.WriteString("Hello client, welcome to the matrix. ");
-				socket->Send(oms, myClient->port); 
-			}
-			// Challenge answer is wrong
-			else
-			{
-				myClient->TRY--; // Rest try
-				std::cout << SearchNewClientBySalt(saltServerClient)->TRY << std::endl;
-				// Check Tries
-				if (myClient->TRY > 0)
+				// Challenge answer is correct
+				if (myClient->challenge == challengeResponse)
 				{
-					// Send Same Challenge Request
-					OutputMemoryStream oms;
-					oms.Write(Protocol::STP::CHALLENGE_REQUEST);
-					oms.Write(myClient->challenge);
-					oms.Write(myClient->serverSALT); //Send Salt Server
-					socket->Send(oms, myClient->port);
-				}
-				else //We delete the client
-				{
+					// Store the new client into active client
+					Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
+					active_con_table.push_back(act_con);
+					
+					// Delete it from the new clients
 					DeleteNewClients(*myClient);
+				
+					// Send hello message to the client
+					Protocol::Send(socket, Protocol::STP::HELLO_CLIENT, myClient->port,
+						"WELCOME MESSAGE | Hello client, welcome to the matrix. ");
+				}
+				// Challenge answer is wrong
+				else
+				{
+					myClient->TRY--; // Rest try
+					std::cout << "Tries: " << SearchNewClientBySalt(saltServerClient)->TRY << std::endl;
+					// Check Tries
+					if (myClient->TRY > 0)
+					{
+						// Send Same Challenge Request
+						Protocol::Send(socket, Protocol::STP::CHALLENGE_REQUEST, myClient->port,
+							myClient->challenge, myClient->serverSALT);
+					}
+					else //We delete the client
+					{
+						DeleteNewClients(*myClient);
+					}
 				}
 			}
 		}
@@ -232,17 +240,14 @@ void Server::Update()
 			std::string messageReceived = " ";
 			messageReceived = ims.ReadString();
 			std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
-
+			
 			// Send it to other clients
 			for (Active_Connection* p : active_con_table)
 			{
 				if (p->port != socket->PortReceived())
 				{
-					OutputMemoryStream oms;
-					oms.Write(Protocol::STP::CHAT);
-					oms.Write(socket->PortReceived());
-					oms.WriteString(messageReceived);
-					socket->Send(oms, p->port);
+					Protocol::Send(socket, Protocol::STP::CHAT, p->port,
+						messageReceived, socket->PortReceived());
 				}
 			}
 		}

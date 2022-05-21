@@ -4,12 +4,9 @@ SFML_Draw::SFML_Draw()
 {
 	window = new sf::RenderWindow(sf::VideoMode(800, 600), "My window");
 
-    //UpdateWindow();
-
     window->setActive(false);
     std::thread tDraw(&SFML_Draw::UpdateWindow, this);
     tDraw.detach();
-
 }
 
 SFML_Draw::~SFML_Draw()
