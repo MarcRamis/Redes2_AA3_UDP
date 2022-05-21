@@ -2,9 +2,7 @@
 
 SFML_Draw::SFML_Draw()
 {
-	window = new sf::RenderWindow(sf::VideoMode(800, 600), "My window");
-
-    window->setActive(false);
+	
     std::thread tDraw(&SFML_Draw::UpdateWindow, this);
     tDraw.detach();
 }
@@ -16,9 +14,13 @@ SFML_Draw::~SFML_Draw()
 
 void SFML_Draw::UpdateWindow()
 {
-    window->setActive(true);
+    window = new sf::RenderWindow(sf::VideoMode(800, 600), "My window");
+
+    //window->setActive(false);
+    //window->setActive(true);
     while (window->isOpen())
     {
+
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (window->pollEvent(event))

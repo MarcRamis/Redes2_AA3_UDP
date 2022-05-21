@@ -23,7 +23,7 @@ class Client
 	EPhase phase = EPhase::REQUEST_CON;
 	
 	// Player
-	//Player *player = new Player;
+	Player *player = new Player;
 
 	// Init
 	void WelcomeMessage();
