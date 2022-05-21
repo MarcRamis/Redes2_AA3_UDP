@@ -94,7 +94,8 @@ void Server::DisconnectClient()
 				socket->Send(oms, p->port);
 			}
 		}
-
+		
+		// Delete if the combined salt coincide with the combined salt client
 		DeleteActiveClients(*SearchActiveClientByPort(socket->PortReceived()));
 		std::cout << "Deleted the client with port: " << socket->PortReceived() << std::endl;
 	}
