@@ -1,6 +1,22 @@
 #pragma once
 
 #include <algorithm>
+#include <future>
+#include <string>
+
+static std::string GetLineFromCin() {
+
+	std::string line;
+	std::getline(std::cin, line);
+	return line;
+}
+
+static int GetLineFromCinInt() {
+
+	int line;
+	std::cin >> line;
+	return line;
+}
 
 static unsigned int GenerateSalt()
 {
