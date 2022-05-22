@@ -142,6 +142,10 @@ Client::Client()
 	// Thread to receive messages
 	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
+
+	//std::thread tDrawUpdate(&player->Update, this);
+	//tDrawUpdate.detach();
+
 }
 
 Client::~Client()
@@ -151,28 +155,31 @@ Client::~Client()
 
 void Client::Update()
 {
-	if (phase == EPhase::CHAT)
-	{
-		std::cout << "CHAT" << std::endl;
-		std::cout << "Write something";
-		std::cout << " | 'e' to exit" << std::endl;
-		auto future = std::async(std::launch::async, GetLineFromCin);
-		message = future.get();
+	//if (phase == EPhase::CHAT)
+	//{
+	//	std::cout << "CHAT" << std::endl;
+	//	std::cout << "Write something";
+	//	std::cout << " | 'e' to exit" << std::endl;
+	//	auto future = std::async(std::launch::async, GetLineFromCin);
+	//	message = future.get();
+	//
+	//	std::cout << "waiting..." << std::endl;
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//
+	//	if (message.size() > 0) {
+	//
+	//		OutputMemoryStream oms;
+	//		oms.Write(Protocol::PTS::CHAT);
+	//		oms.WriteString(message);
+	//		socket->Send(oms, SERVER_IP);
+	//
+	//		DisconnectFromGetline(message);
+	//		message.clear();
+	//	}
+	//}
 
-		std::cout << "waiting..." << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	player->Update();
 
-		if (message.size() > 0) {
-
-			OutputMemoryStream oms;
-			oms.Write(Protocol::PTS::CHAT);
-			oms.WriteString(message);
-			socket->Send(oms, SERVER_IP);
-
-			DisconnectFromGetline(message);
-			message.clear();
-		}
-	}
 }
 
 bool Client::GetClientOpen()
