@@ -15,7 +15,7 @@ Player::Player()
 
 Player::Player(float _posX, float _posY, float _velocity) : velocity(_velocity)
 {
-	draw = new SFML_Draw(sf::Vector2f(250.0f, 200.0f), 0.1f);
+	draw = new SFML_Draw(sf::Vector2f(250.0f, 200.0f), velocity);
 
 	//std::thread tInputs(&Player::GetInputs, this);
 	//tInputs.detach();
@@ -24,9 +24,9 @@ Player::Player(float _posX, float _posY, float _velocity) : velocity(_velocity)
 void Player::Update()
 {
 	
-	draw->MovePlayer();
-	draw->MoveProjectiles();
-	
+	//draw->MovePlayer();
+	//draw->MoveProjectiles();
+	draw->UpdateWindow();
 }
 
 void Player::GetInputs()

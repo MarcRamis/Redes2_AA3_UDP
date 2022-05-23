@@ -9,8 +9,9 @@ SFML_Draw::SFML_Draw(sf::Vector2f _playerPosition, float _velocity) : velocity(_
     myPlayerTex = sf::RectangleShape(sf::Vector2f(50.f, 50.f));
     myPlayerTex.setPosition(_playerPosition);
 
-    std::thread tDraw(&SFML_Draw::UpdateWindow, this);
-    tDraw.detach();
+    window = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
+    //std::thread tDraw(&SFML_Draw::UpdateWindow, this);
+    //tDraw.detach();
 }
 
 SFML_Draw::~SFML_Draw()
@@ -20,7 +21,7 @@ SFML_Draw::~SFML_Draw()
 
 void SFML_Draw::UpdateWindow()
 {
-    window = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
+   
 
     sf::Clock clock;
 
@@ -135,6 +136,9 @@ void SFML_Draw::UpdateWindow()
         // draw everything here...
         // window.draw(...);
         
+        MovePlayer();
+        MoveProjectiles();
+
         DrawSquares();
         DrawPlayer();
         DrawProjectiles();
@@ -193,7 +197,7 @@ void SFML_Draw::AddProjectile(float _sizeX, float _sizeY, float _positionX, floa
 {
     sf::RectangleShape projectileTex(sf::Vector2f(_sizeX, _sizeY));
     projectileTex.setPosition(_positionX, _positionY);
-    Projectile newPorjectile(sf::Vector2f(_positionX, _positionY), sf::Vector2f(_directionX, _directionY), 0.1f * _delta, projectileTex);
+    Projectile newPorjectile(sf::Vector2f(_positionX, _positionY), sf::Vector2f(_directionX, _directionY), 0.2f, projectileTex);
     projectiles.push_back(newPorjectile);
 }
 
