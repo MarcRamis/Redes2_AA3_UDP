@@ -17,7 +17,7 @@ class Client
 	
 	// This has to change for the info that our client needs
 	New_Connection* new_con;
-	Active_Connection *active_con;
+	Timer TS; // Time stamp from server
 	
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
