@@ -27,8 +27,12 @@ void Client::Receive()
 		InputMemoryStream ims = *socket->Receive();
 		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
+			// Update inactivity server timer
+			TS.Start();
+			
 			// Receive header
 			int _header; ims.Read(&_header);
+
 
 			// Find header
 			switch (static_cast<Protocol::STP>(_header))
@@ -82,8 +86,8 @@ void Client::Receive()
 			break;
 			case Protocol::STP::DISCONNECT_CLIENT:
 				
-				std::cout << "You are being disconnected... Bye bye ~~" << std::endl;
-				Disconnect();
+				ConsoleWait(1000.f);
+				DisconnectWithoutNotify();
 				break;
 
 			}
@@ -123,12 +127,20 @@ void Client::Disconnect()
 	// Advice server
 	Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT));
 	
+	DisconnectWithoutNotify();
+}
+
+void Client::DisconnectWithoutNotify()
+{
+	std::cout << "You are being disconnected for inactivity... Bye bye ~~" << std::endl;
+
 	// Clean memory
 	socket->Disconnect();
 	if (socket != nullptr) delete socket;
 	if (new_con != nullptr) delete new_con;
-	if (active_con != nullptr) delete active_con;
+	
 	isOpen = false;
+	exit(0);
 }
 
 void Client::DeleteCriticPacket(int id)
@@ -138,7 +150,6 @@ void Client::DeleteCriticPacket(int id)
 		if (current_cri_packets.at(i)->ID == id)
 		{
 			current_cri_packets.erase(current_cri_packets.begin() + i);
-			std::cout << "packet deleted" << std::endl;
 			return;
 		}
 	}
@@ -173,6 +184,8 @@ Client::Client()
 	// Thread to send packages
 	std::thread tSend(&Client::SendCriticPacket, this);
 	tSend.detach();
+	
+	TS.Start();
 }
 
 Client::~Client()
@@ -200,6 +213,11 @@ void Client::Update()
 			DisconnectFromGetline(message);
 			message.clear();
 		}
+	}
+	
+	if (TS.ElapsedSeconds() > T_INACTIVITY)
+	{
+		Disconnect();
 	}
 }
 

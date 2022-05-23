@@ -55,6 +55,14 @@ OutputMemoryStream *Protocol::Send(STP protocol, int id)
 	return oms;
 }
 
+OutputMemoryStream* Protocol::Send(STP protocol)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+
+	return oms;
+}
+
 OutputMemoryStream *Protocol::Send(STP protocol, int id, int id2)
 {
 	OutputMemoryStream* oms = new OutputMemoryStream();

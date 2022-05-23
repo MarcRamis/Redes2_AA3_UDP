@@ -7,8 +7,8 @@
 #include "Tables.h"
 #include "Utils.h"
 #include "Protocol.h"
-#include "Timer.h"
 #include "Player.h"
+#include "ConsoleControl.h"
 
 class Client
 {
@@ -17,7 +17,7 @@ class Client
 	
 	// This has to change for the info that our client needs
 	New_Connection* new_con;
-	Active_Connection *active_con;
+	Timer TS; // Time stamp from server
 	
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
@@ -28,7 +28,7 @@ class Client
 	
 	// Player
 	//Player *player = new Player;
-
+	
 	// Init
 	void WelcomeMessage();
 	
@@ -42,6 +42,7 @@ class Client
 	// Disconnect
 	void DisconnectFromGetline(std::string text);
 	void Disconnect();
+	void DisconnectWithoutNotify();
 
 	// Add current packets
 	void AddCriticPacket(OutputMemoryStream *oms);
