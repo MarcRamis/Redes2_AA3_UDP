@@ -141,6 +141,7 @@ void Server::Update()
 	InputMemoryStream ims = *socket->Receive();
 	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 	{
+		std::cout << "Active client size: " << active_con_table.size() << std::endl;
 		// Receive header
 		int _header; ims.Read(&_header);
 		
@@ -216,7 +217,7 @@ void Server::Update()
 				else
 				{
 					myClient->TRY--; // Rest try
-					std::cout << "Tries: " << SearchNewClientBySalt(saltServerClient)->TRY << std::endl;
+					//std::cout << "Tries: " << SearchNewClientBySalt(saltServerClient)->TRY << std::endl;
 					// Check Tries
 					if (myClient->TRY > 0)
 					{

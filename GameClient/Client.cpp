@@ -58,7 +58,7 @@ void Client::Receive()
 				socket->Send(oms, SERVER_IP);
 			}
 			break;
-
+			
 			case Protocol::STP::CHAT:
 			{
 				unsigned short otherClientPort = 0; std::string otherClientMessage;
@@ -98,9 +98,8 @@ void Client::RequestConnection()
 			oms.Write(Protocol::PTS::HELLO_SERVER); // Header
 			oms.WriteString(message); oms.WriteString(new_con->address); // Message
 			oms.Write(new_con->clientSALT); // Salt
-			oms.Write(new_con->challenge); // Challenge
 			socket->Send(oms, SERVER_IP);
-
+			
 			timer.Start();
 		}
 	}

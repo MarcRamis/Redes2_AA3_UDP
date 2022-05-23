@@ -2,6 +2,7 @@
 
 #include "Port.h"
 #include "Constants.h"
+#include "OutputMemoryStream.h"
 
 struct New_Connection {
 	unsigned short port;
@@ -28,18 +29,29 @@ struct Active_Connection {
 	int TS = TIMESTAMP_DEFAULT; // Almacena el TS del último pkt recibido
 	int PacketID; // ID del último pkt enviado
 	int RemoteID; // ID del último pkt enviado
+
 	Active_Connection(unsigned short _port, std::string _address, int _clientSALT, int _serverSALT);
 	~Active_Connection();
 	Active_Connection();
 };
 
-struct Pack_No_Ack{
-	
+struct Pack_No_Ack {
+
 	unsigned short port; // puerto destino
-	std::string address; // IP 
-	
+
 	int ID; // ID del paquete
-	int TS_first = TIMESTAMP_DEFAULT; // TS del primer envío del paquete
-	int TS_last = TIMESTAMP_DEFAULT; // TS del último envío del paquete
-	std::string message; // Contenido del mensaje
+	int TS_first; // TS del primer envío del paquete
+	int TS_last; // TS del último envío del paquete
+	
+	OutputMemoryStream content; // Contenido del mensaje
+};
+
+struct Pack
+{
+	int ID; // ID del paquete
+	int TS;  // TS de cuando se ha enviado
+	OutputMemoryStream content;
+	
+	Pack() {};
+	Pack(int _ID, int _TS, OutputMemoryStream _content) : ID(_ID), TS(_TS), content(_content) {};
 };
