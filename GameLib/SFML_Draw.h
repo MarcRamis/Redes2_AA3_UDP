@@ -16,6 +16,7 @@ class SFML_Draw
 	
 	sf::Vector2f direction;
 	float velocity;
+	float delta;
 
 	bool shootKeyPreesed = false;
 

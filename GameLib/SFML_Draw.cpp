@@ -28,7 +28,7 @@ void SFML_Draw::UpdateWindow()
     while (window->isOpen())
     {
 
-        float delta = clock.restart().asSeconds();
+        delta = clock.restart().asSeconds();
 
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
@@ -44,24 +44,24 @@ void SFML_Draw::UpdateWindow()
                 if (event.key.code == sf::Keyboard::W)
                 {
                     //_playerDirection->y = -_velocity * delta;
-                    direction.y = -velocity * delta;
+                    direction.y = -velocity;
                 }
                 else if (event.key.code == sf::Keyboard::S)
                 {
                     //_playerDirection->y = _velocity * delta;
-                    direction.y = velocity * delta;
+                    direction.y = velocity;
                 }
 
 
                 if (event.key.code == sf::Keyboard::A)
                 {
                     //_playerDirection->x = -_velocity * delta;
-                    direction.x = -velocity * delta;
+                    direction.x = -velocity;
                 }
                 else if (event.key.code == sf::Keyboard::D)
                 {
                     //_playerDirection->x = _velocity * delta;
-                    direction.x = velocity * delta;
+                    direction.x = velocity;
                 }
 
                 if (event.key.code == sf::Keyboard::Left && !shootKeyPreesed)
@@ -170,7 +170,7 @@ void SFML_Draw::AddSquare(float _sizeX, float _sizeY)
 
 void SFML_Draw::MovePlayer()
 {
-    myPlayerTex.move(direction.x, direction.y);
+    myPlayerTex.move(direction.x * delta, direction.y * delta);
 }
 
 sf::Vector2f SFML_Draw::GetSquarepos(int _squareID)
