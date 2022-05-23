@@ -83,7 +83,8 @@ void Client::Receive()
 			case Protocol::STP::DISCONNECT_CLIENT:
 				
 				std::cout << "You are being disconnected... Bye bye ~~" << std::endl;
-				Disconnect();
+				ConsoleWait(1000.f);
+				DisconnectWithoutNotify();
 				break;
 
 			}
@@ -128,7 +129,21 @@ void Client::Disconnect()
 	if (socket != nullptr) delete socket;
 	if (new_con != nullptr) delete new_con;
 	if (active_con != nullptr) delete active_con;
+	
 	isOpen = false;
+	exit(0);
+}
+
+void Client::DisconnectWithoutNotify()
+{
+	// Clean memory
+	socket->Disconnect();
+	if (socket != nullptr) delete socket;
+	if (new_con != nullptr) delete new_con;
+	if (active_con != nullptr) delete active_con;
+	
+	isOpen = false;
+	exit(0);
 }
 
 void Client::DeleteCriticPacket(int id)
@@ -138,7 +153,6 @@ void Client::DeleteCriticPacket(int id)
 		if (current_cri_packets.at(i)->ID == id)
 		{
 			current_cri_packets.erase(current_cri_packets.begin() + i);
-			std::cout << "packet deleted" << std::endl;
 			return;
 		}
 	}

@@ -2,16 +2,20 @@
 
 #include "Port.h"
 #include "Constants.h"
+#include "Timer.h"
 #include "OutputMemoryStream.h"
 
 struct New_Connection {
+	
 	unsigned short port;
 	std::string address;
 	std::string name;
+	
 	int challenge;
 	int clientSALT;
 	int serverSALT;
-	int TS = TIMESTAMP_DEFAULT; // Almacena el TS del hello
+	
+	Timer TS; // Almacena el TS del último pkt recibido
 	int TRY = TRIES_DEFAULT;
 
 	New_Connection();
@@ -21,14 +25,15 @@ struct New_Connection {
 };
 
 struct Active_Connection {
+	
 	unsigned short port;
 	std::string address;
 	std::string name;
+	
 	int clientSALT;
 	int serverSALT;
-	int TS = TIMESTAMP_DEFAULT; // Almacena el TS del último pkt recibido
-	int PacketID; // ID del último pkt enviado
-	int RemoteID; // ID del último pkt enviado
+	
+	Timer TS; // Almacena el TS del último pkt recibido
 
 	Active_Connection(unsigned short _port, std::string _address, int _clientSALT, int _serverSALT);
 	~Active_Connection();

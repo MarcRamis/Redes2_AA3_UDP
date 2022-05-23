@@ -23,6 +23,7 @@ public:
 	Here it comes the data container that the user want to send */
 	static OutputMemoryStream *Send(STP protocol, std::string str);
 	static OutputMemoryStream *Send(STP protocol, int id);
+	static OutputMemoryStream *Send(STP protocol);
 	static OutputMemoryStream *Send(STP protocol, int id, int id2);
 	static OutputMemoryStream *Send(STP protocol, std::string str, unsigned short id);
 };

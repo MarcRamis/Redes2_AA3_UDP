@@ -44,7 +44,6 @@ Active_Connection* Server::SearchActiveClientBySalt(unsigned int _clientCombSalt
 	return nullptr;
 }
 
-
 New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 {
 	for (New_Connection *client : new_con_table)
@@ -83,13 +82,13 @@ void Server::DeleteActiveClients(Active_Connection _clientToDelete)
 	active_con_table.erase(active_con_table.begin() + i);
 }
 
-void Server::DisconnectClient()
+void Server::DisconnectClient(int port)
 {
 	// Disconnects a new client
-	if (!IsNewClient(socket->PortReceived()))
+	if (!IsNewClient(port))
 	{
-		DeleteNewClients(*SearchNewClientByPort(socket->PortReceived()));
-		std::cout << "Deleted the client with port: " << socket->PortReceived() << std::endl;
+		DeleteNewClients(*SearchNewClientByPort(port));
+		std::cout << "Deleted the client with port: " << port << std::endl;
 	}
 	// Disconnects an active client
 	else
@@ -97,19 +96,71 @@ void Server::DisconnectClient()
 		// Send a message to other clients to let them know a player disconnected
 		for (Active_Connection* p : active_con_table)
 		{
-			if (p->port != socket->PortReceived())
+			if (p->port != port)
 			{
-				std::string messageDisconnect = "--The player with salt: " +
-					std::to_string(SearchActiveClientByPort(socket->PortReceived())->clientSALT
-						& SearchActiveClientByPort(socket->PortReceived())->serverSALT) + " has been disconnected--";
+				std::string messageDisconnect = "--The player with port: " +
+					std::to_string(port) + " has been disconnected--";
 				
-				Send(Protocol::Send(Protocol::STP::CHAT, messageDisconnect, socket->PortReceived()), p->port);
+				Send(Protocol::Send(Protocol::STP::CHAT, messageDisconnect, port), p->port);
 			}
 		}
 		
 		// Delete if the combined salt coincide with the combined salt client
-		DeleteActiveClients(*SearchActiveClientByPort(socket->PortReceived()));
-		std::cout << "Deleted the client with port: " << socket->PortReceived() << std::endl;
+		DeleteActiveClients(*SearchActiveClientByPort(port));
+		std::cout << "Deleted the client with port: " << port << std::endl;
+	}
+}
+
+void Server::CheckInactivity()
+{
+	while (isOpen)
+	{
+		for (New_Connection *nConn : new_con_table)
+		{
+			if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
+			{
+				DisconnectClient(nConn->port);
+				Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
+			}
+		}
+		for (Active_Connection* aConn : active_con_table)
+		{
+			if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
+			{
+				DisconnectClient(aConn->port);
+				Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
+			}
+		}
+	}
+}
+
+void Server::UpdateClientTimer(int port)
+{
+	if (!IsNewClient(port))
+	{
+		if (!new_con_table.empty())
+		{
+			for (New_Connection* conn : new_con_table)
+			{
+				if (conn->port == port)
+				{
+					conn->TS.Start();
+				}
+			}
+		}
+	}
+	else
+	{
+		if (!active_con_table.empty())
+		{
+			for (Active_Connection* conn : active_con_table)
+			{
+				if (conn->port == port)
+				{
+					conn->TS.Start();
+				}
+			}
+		}
 	}
 }
 
@@ -124,6 +175,9 @@ Server::Server()
 
 	socket = new UdpSocket;
 	socket->Bind(SERVER_IP);
+
+	std::thread tCheckInactivity(&Server::CheckInactivity, this);
+	tCheckInactivity.detach();
 }
 
 Server::~Server()
@@ -149,16 +203,17 @@ void Server::Update()
 	{
 		std::cout << "Active client size: " << active_con_table.size() << std::endl;
 		
+		//Update client timer
+		UpdateClientTimer(socket->PortReceived());
+
 		// Receive header
 		int _header; ims.Read(&_header);
 		
-		std::cout << "message sent" << std::endl;
 		// Find Header
 		switch (static_cast<Protocol::PTS>(_header))
 		{
 		case Protocol::PTS::HELLO_SERVER:
 		{
-			std::cout << "message sent --> Hello server" << std::endl;
 			// Read the message
 			std::string messageReceived, ipReceived;
 			messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
@@ -175,6 +230,7 @@ void Server::Update()
 				// Create new client
 				New_Connection *newClient = new New_Connection(socket->PortReceived(), 
 					socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
+				newClient->TS.Start();
 				new_con_table.push_back(newClient);
 				
 				// Send critic packet confirmation
@@ -221,6 +277,7 @@ void Server::Update()
 				{
 					// Store the new client into active client
 					Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
+					act_con->TS.Start();
 					active_con_table.push_back(act_con);
 					
 					// Delete it from the new clients
@@ -273,9 +330,10 @@ void Server::Update()
 			}
 		}
 			break;
+
 		case Protocol::PTS::DISCONNECT_CLIENT:
 
-			DisconnectClient();
+			DisconnectClient(socket->PortReceived());
 			break;
 		}
 

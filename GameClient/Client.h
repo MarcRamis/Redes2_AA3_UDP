@@ -7,8 +7,8 @@
 #include "Tables.h"
 #include "Utils.h"
 #include "Protocol.h"
-#include "Timer.h"
 #include "Player.h"
+#include "ConsoleControl.h"
 
 class Client
 {
@@ -28,7 +28,7 @@ class Client
 	
 	// Player
 	//Player *player = new Player;
-
+	
 	// Init
 	void WelcomeMessage();
 	
@@ -42,6 +42,7 @@ class Client
 	// Disconnect
 	void DisconnectFromGetline(std::string text);
 	void Disconnect();
+	void DisconnectWithoutNotify();
 
 	// Add current packets
 	void AddCriticPacket(OutputMemoryStream *oms);
