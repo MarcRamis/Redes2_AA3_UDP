@@ -28,6 +28,8 @@ class Server
 
 	void DisconnectClient();
 
+	void Send(OutputMemoryStream *pack, int port);
+
 public:
 	Server();
 	~Server();

@@ -14,10 +14,14 @@ class Client
 {
 	bool isOpen = true;
 	UdpSocket* socket;
+	
+	// This has to change for the info that our client needs
 	New_Connection* new_con;
 	Active_Connection *active_con;
 	
-	std::string message;
+	// Critic packets to send
+	std::vector<Pack*> current_cri_packets;
+	int _tmpIds = 0;
 	
 	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, CHAT, GAME};
 	EPhase phase = EPhase::REQUEST_CON;
@@ -31,12 +35,17 @@ class Client
 	// Receive packets
 	void Receive();
 
-	// Request Connection 
-	void RequestConnection();
+	// Send packets
+	void Send(OutputMemoryStream *pack);
+	void SendCriticPacket();
 
 	// Disconnect
 	void DisconnectFromGetline(std::string text);
 	void Disconnect();
+
+	// Add current packets
+	void AddCriticPacket(OutputMemoryStream *oms);
+	void DeleteCriticPacket(int id);
 
 public:
 	
