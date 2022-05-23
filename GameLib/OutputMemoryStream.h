@@ -7,6 +7,7 @@
 class OutputMemoryStream
 {
 private:
+	
 	char* mBuffer;
 	uint32_t mHead;
 	uint32_t mCapacity;

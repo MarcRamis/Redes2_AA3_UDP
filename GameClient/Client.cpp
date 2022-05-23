@@ -14,8 +14,9 @@ void Client::WelcomeMessage()
 	new_con = new New_Connection(socket->GetLocalPort(), socket->GetLocalIP(), GenerateSalt());
 	
 	// Send welcome message to Server (to make server know that this client exists)
-	std::thread tRequestCon(&Client::RequestConnection, this);
-	tRequestCon.detach();
+	AddCriticPacket(Protocol::Send(
+	Protocol::PTS::HELLO_SERVER, "Hi Server, my IP is: ",
+		new_con->address, new_con->clientSALT));
 }
 
 void Client::Receive()
@@ -51,11 +52,9 @@ void Client::Receive()
 				challengeAnswer = stoi(future.get());
 
 				// Send challenge answer
-				OutputMemoryStream oms;
-				oms.Write(Protocol::PTS::CHALLENGE_RESPONSE);
-				oms.Write(challengeAnswer);
-				oms.Write(new_con->clientSALT & new_con->serverSALT); // Send Complete Salt
-				socket->Send(oms, SERVER_IP);
+				AddCriticPacket(Protocol::Send(
+					Protocol::PTS::CHALLENGE_RESPONSE, challengeAnswer, 
+					new_con->clientSALT & new_con->serverSALT));
 			}
 			break;
 			
@@ -65,6 +64,13 @@ void Client::Receive()
 				ims.Read(&otherClientPort); otherClientMessage = ims.ReadString();
 				std::cout << otherClientPort << ": " << otherClientMessage << std::endl;
 			}
+			break;
+
+			case Protocol::STP::CRI_PACK_RECEIVED:
+			{
+				int currentID; ims.Read(&currentID);
+				DeleteCriticPacket(currentID);
+			}	
 			break;
 			
 			case Protocol::STP::HELLO_CLIENT:
@@ -85,21 +91,23 @@ void Client::Receive()
 	}
 }
 
-void Client::RequestConnection()
+void Client::Send(OutputMemoryStream *pack)
+{
+	socket->Send(*pack, SERVER_IP);
+}
+
+void Client::SendCriticPacket()
 {
 	Timer timer; timer.Start();
-	while (phase == EPhase::REQUEST_CON)
+	while (isOpen)
 	{
-		// Request message every { X } ms
-		if (timer.ElapsedSeconds() > REQ_CON_MS)
+		if (timer.ElapsedSeconds() > T_SEND)
 		{
-			std::string message = "Hi Server, my IP is: ";
-			OutputMemoryStream oms;
-			oms.Write(Protocol::PTS::HELLO_SERVER); // Header
-			oms.WriteString(message); oms.WriteString(new_con->address); // Message
-			oms.Write(new_con->clientSALT); // Salt
-			socket->Send(oms, SERVER_IP);
-			
+			for (Pack *pack : current_cri_packets)
+			{
+				pack->content->Write(pack->ID);
+				socket->Send(*pack->content, SERVER_IP);
+			}
 			timer.Start();
 		}
 	}
@@ -113,9 +121,7 @@ void Client::DisconnectFromGetline(std::string text)
 void Client::Disconnect()
 {
 	// Advice server
-	OutputMemoryStream oms;
-	oms.Write(Protocol::PTS::DISCONNECT_CLIENT);
-	socket->Send(oms, SERVER_IP);
+	Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT));
 	
 	// Clean memory
 	socket->Disconnect();
@@ -125,8 +131,30 @@ void Client::Disconnect()
 	isOpen = false;
 }
 
+void Client::DeleteCriticPacket(int id)
+{
+	for (int i = 0; i < current_cri_packets.size(); i++)
+	{
+		if (current_cri_packets.at(i)->ID == id)
+		{
+			current_cri_packets.erase(current_cri_packets.begin() + i);
+			std::cout << "packet deleted" << std::endl;
+			return;
+		}
+	}
+}
+
+void Client::AddCriticPacket(OutputMemoryStream *oms)
+{
+	Pack* tmpPack = new Pack(_tmpIds, 0.5f, oms);
+	current_cri_packets.push_back(tmpPack);
+	_tmpIds++;
+}
+
 Client::Client()
 {
+	std::cout << "STARTING THE CLIENT" << std::endl;
+
 	socket = new UdpSocket;
 
 	// Init
@@ -138,9 +166,13 @@ Client::Client()
 	//std::thread tDraw(Client::draw->UpdateWindow);
 	//tDraw.detach();
 
-	// Thread to receive messages
+	// Thread to receive packages
 	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
+	
+	// Thread to send packages
+	std::thread tSend(&Client::SendCriticPacket, this);
+	tSend.detach();
 }
 
 Client::~Client()
@@ -156,17 +188,14 @@ void Client::Update()
 		std::cout << "Write something";
 		std::cout << " | 'e' to exit" << std::endl;
 		auto future = std::async(std::launch::async, GetLineFromCin);
-		message = future.get();
+		std::string message = future.get();
 
 		std::cout << "waiting..." << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 		if (message.size() > 0) {
-
-			OutputMemoryStream oms;
-			oms.Write(Protocol::PTS::CHAT);
-			oms.WriteString(message);
-			socket->Send(oms, SERVER_IP);
+			
+			Send(Protocol::Send(Protocol::PTS::CHAT,message));
 
 			DisconnectFromGetline(message);
 			message.clear();

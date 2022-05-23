@@ -103,8 +103,7 @@ void Server::DisconnectClient()
 					std::to_string(SearchActiveClientByPort(socket->PortReceived())->clientSALT
 						& SearchActiveClientByPort(socket->PortReceived())->serverSALT) + " has been disconnected--";
 				
-				Protocol::Send(socket, Protocol::STP::CHAT, p->port, 
-					messageDisconnect, socket->PortReceived());
+				Send(Protocol::Send(Protocol::STP::CHAT, messageDisconnect, socket->PortReceived()), p->port);
 			}
 		}
 		
@@ -114,8 +113,15 @@ void Server::DisconnectClient()
 	}
 }
 
+void Server::Send(OutputMemoryStream *pack, int port)
+{
+	socket->Send(*pack, port);
+}
+
 Server::Server()
 {
+	std::cout << "STARTING THE SERVER" << std::endl;
+
 	socket = new UdpSocket;
 	socket->Bind(SERVER_IP);
 }
@@ -142,18 +148,23 @@ void Server::Update()
 	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 	{
 		std::cout << "Active client size: " << active_con_table.size() << std::endl;
+		
 		// Receive header
 		int _header; ims.Read(&_header);
 		
+		std::cout << "message sent" << std::endl;
 		// Find Header
 		switch (static_cast<Protocol::PTS>(_header))
 		{
 		case Protocol::PTS::HELLO_SERVER:
 		{
+			std::cout << "message sent --> Hello server" << std::endl;
 			// Read the message
 			std::string messageReceived, ipReceived;
 			messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
 			unsigned int clientSalt; ims.Read(&clientSalt);		
+			int _criticId; ims.Read(&_criticId);
+
 			std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
 
 			// Generate Challenge
@@ -166,9 +177,12 @@ void Server::Update()
 					socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
 				new_con_table.push_back(newClient);
 				
+				// Send critic packet confirmation
+				Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
+
 				// Send New Challenge Request
-				Protocol::Send(socket, Protocol::STP::CHALLENGE_REQUEST, socket->PortReceived(),
-					challenge, newClient->serverSALT);
+				Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST, challenge, 
+					newClient->serverSALT), socket->PortReceived());
 			}
 			else
 			{
@@ -177,9 +191,12 @@ void Server::Update()
 
 				if (oldClient != nullptr)
 				{
+					// Send critic packet confirmation
+					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
+
 					// Send Same Challenge Request
-					Protocol::Send(socket, Protocol::STP::CHALLENGE_REQUEST, socket->PortReceived(),
-						oldClient->challenge, oldClient->serverSALT);
+					Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST, oldClient->challenge,
+						oldClient->serverSALT), socket->PortReceived());
 				}
 			}
 		}
@@ -190,9 +207,9 @@ void Server::Update()
 		{
 			// Receive challenge answer
 			int challengeResponse;
-			unsigned int saltServerClient;
 			ims.Read(&challengeResponse);
-			ims.Read(&saltServerClient);
+			unsigned int saltServerClient; ims.Read(&saltServerClient);
+			int _criticId; ims.Read(&_criticId);
 			
 			// Identify client
 			New_Connection *myClient = SearchNewClientBySalt(saltServerClient);
@@ -209,21 +226,24 @@ void Server::Update()
 					// Delete it from the new clients
 					DeleteNewClients(*myClient);
 				
+					// Send critic packet confirmation
+					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
+
 					// Send hello message to the client
-					Protocol::Send(socket, Protocol::STP::HELLO_CLIENT, myClient->port,
-						"WELCOME MESSAGE | Hello client, welcome to the matrix. ");
+					Send(Protocol::Send(Protocol::STP::HELLO_CLIENT, 
+						"WELCOME MESSAGE | Hello client, welcome to the matrix. "), myClient->port);
 				}
 				// Challenge answer is wrong
 				else
 				{
 					myClient->TRY--; // Rest try
-					//std::cout << "Tries: " << SearchNewClientBySalt(saltServerClient)->TRY << std::endl;
+					
 					// Check Tries
 					if (myClient->TRY > 0)
 					{
 						// Send Same Challenge Request
-						Protocol::Send(socket, Protocol::STP::CHALLENGE_REQUEST, myClient->port,
-							myClient->challenge, myClient->serverSALT);
+						Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST,
+							myClient->challenge, myClient->serverSALT), myClient->port);
 					}
 					else //We delete the client
 					{
@@ -247,8 +267,8 @@ void Server::Update()
 			{
 				if (p->port != socket->PortReceived())
 				{
-					Protocol::Send(socket, Protocol::STP::CHAT, p->port,
-						messageReceived, socket->PortReceived());
+					Send(Protocol::Send(Protocol::STP::CHAT,
+						messageReceived, socket->PortReceived()), p->port);
 				}
 			}
 		}

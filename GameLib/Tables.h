@@ -49,9 +49,9 @@ struct Pack_No_Ack {
 struct Pack
 {
 	int ID; // ID del paquete
-	int TS;  // TS de cuando se ha enviado
-	OutputMemoryStream content;
+	float TS;  // TS de cuando se ha enviado
+	OutputMemoryStream *content;
 	
 	Pack() {};
-	Pack(int _ID, int _TS, OutputMemoryStream _content) : ID(_ID), TS(_TS), content(_content) {};
+	Pack(int _ID, float _TS, OutputMemoryStream *_content) : ID(_ID), TS(_TS), content(_content) {};
 };
