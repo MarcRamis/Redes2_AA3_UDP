@@ -9,6 +9,7 @@
 #include "Protocol.h"
 #include "Player.h"
 #include "ConsoleControl.h"
+#include "Command.h"
 
 class Client
 {

@@ -5,6 +5,7 @@
 #include "Tables.h"
 #include "Utils.h"
 #include "Protocol.h"
+#include "Command.h"
 
 class Server
 {
