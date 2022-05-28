@@ -13,6 +13,8 @@
 
 class Client
 {
+	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, CHAT, GAME};
+	EPhase phase = EPhase::REQUEST_CON;
 	bool isOpen = true;
 	UdpSocket* socket;
 	
@@ -24,8 +26,8 @@ class Client
 	std::vector<Pack*> current_cri_packets;
 	int _tmpIds = 0;
 	
-	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, CHAT, GAME};
-	EPhase phase = EPhase::REQUEST_CON;
+	// Commands
+	std::vector<Command*> commands;
 	
 	// Player
 	//Player *player = new Player;
@@ -39,6 +41,7 @@ class Client
 	// Send packets
 	void Send(OutputMemoryStream *pack);
 	void SendCriticPacket();
+	void SendCommands();
 
 	// Disconnect
 	void DisconnectFromGetline(std::string text);

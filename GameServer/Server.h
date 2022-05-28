@@ -1,6 +1,7 @@
 #pragma once
 
 #include <UdpSocket.h>
+#include <queue>
 #include "Constants.h"
 #include "Tables.h"
 #include "Utils.h"
@@ -13,7 +14,8 @@ class Server
 	UdpSocket* socket; // Main socket
 	std::vector<New_Connection*> new_con_table; // current new connections
 	std::vector<Active_Connection*> active_con_table; // current active connections 
-	
+	std::queue<Command*> current_commands; // current commands received from players
+
 	// Check if is new  client
 	bool IsNewClient(unsigned short _clientID);
 	

@@ -117,6 +117,22 @@ void Client::SendCriticPacket()
 	}
 }
 
+void Client::SendCommands()
+{
+	Timer timer; timer.Start();
+	while (isOpen)
+	{
+		if (timer.ElapsedSeconds() > T_COMMANDS)
+		{
+			for (Command* c : commands)
+			{
+			}
+
+			timer.Start();
+		}
+	}
+}
+
 void Client::DisconnectFromGetline(std::string text)
 {
 	if (text == "e") Disconnect();
@@ -171,12 +187,6 @@ Client::Client()
 	// Init
 	WelcomeMessage();
 
-	//Init SFML draw
-	//draw = new SFML_Draw();
-	//draw->AddSquare(150.0f, 150.0f);
-	//std::thread tDraw(Client::draw->UpdateWindow);
-	//tDraw.detach();
-
 	// Thread to receive packages
 	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
@@ -185,7 +195,11 @@ Client::Client()
 	std::thread tSend(&Client::SendCriticPacket, this);
 	tSend.detach();
 	
-	TS.Start();
+	// Thread to send commands
+	std::thread tSendCommands(&Client::SendCommands, this);
+	tSendCommands.detach();
+
+	TS.Start(); // Inactivity start timer
 }
 
 Client::~Client()
