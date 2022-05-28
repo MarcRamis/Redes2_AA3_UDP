@@ -39,7 +39,7 @@ void Player::Update()
         draw->DrawSquares();
         draw->DrawPlayer();
         draw->DrawProjectiles();
-        draw->DrawProjectiles();
+        draw->DrawProjectiles(); 
 
         // end the current frame
         draw->GetWindow()->display();

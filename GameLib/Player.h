@@ -12,6 +12,10 @@ class Player
 	bool shootKeyPressed = false;
 
 public:
+	
+	// Commands
+	std::vector<Command*> commands_no_validated;
+
 	Player();
 	Player(float _posX, float _posY, float _velocity);
 

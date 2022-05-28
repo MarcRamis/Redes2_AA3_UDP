@@ -124,11 +124,11 @@ void Client::SendCommands()
 	{
 		if (timer.ElapsedSeconds() > T_COMMANDS)
 		{
-			//for (Command* c : commands)
-			//{
-			//	Send(Protocol::Send(Protocol::PTS::COMMAND, static_cast<int>(c->type), 
-			//		player->GetPlayerPos().x, player->GetPlayerPos().y));
-			//}
+			for (Command* c : commands)
+			{
+				Send(Protocol::Send(Protocol::PTS::COMMAND, static_cast<int>(c->type), 
+					player->GetPlayerPos().x, player->GetPlayerPos().y));
+			}
 
 			timer.Start();
 		}

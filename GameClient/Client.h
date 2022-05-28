@@ -25,9 +25,6 @@ class Client
 	std::vector<Pack*> current_cri_packets;
 	int _tmpIds = 0;
 	
-	// Commands
-	std::vector<Command*> commands_no_validated;
-	
 	// Player
 	Player *player = new Player(150, 100 , 100.0f);
 
