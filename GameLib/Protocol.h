@@ -16,6 +16,7 @@ public:
 	Here it comes the data container that the user want to send */
 	static OutputMemoryStream *Send(PTS protocol, std::string str, std::string str2, int num);
 	static OutputMemoryStream *Send(PTS protocol, int id, int id2);
+	static OutputMemoryStream *Send(PTS protocol, int id, int id2, int id3);
 	static OutputMemoryStream *Send(PTS protocol);
 	static OutputMemoryStream* Send(PTS protocol, std::string str);
 	

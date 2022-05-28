@@ -335,6 +335,8 @@ void Server::Update()
 
 			DisconnectClient(socket->PortReceived());
 			break;
+		case Protocol::PTS::COMMAND:
+			break;
 		}
 
 

@@ -124,9 +124,11 @@ void Client::SendCommands()
 	{
 		if (timer.ElapsedSeconds() > T_COMMANDS)
 		{
-			for (Command* c : commands)
-			{
-			}
+			//for (Command* c : commands)
+			//{
+			//	Send(Protocol::Send(Protocol::PTS::COMMAND, static_cast<int>(c->type), 
+			//		player->GetPlayerPos().x, player->GetPlayerPos().y));
+			//}
 
 			timer.Start();
 		}
@@ -176,6 +178,12 @@ void Client::AddCriticPacket(OutputMemoryStream *oms)
 	Pack* tmpPack = new Pack(_tmpIds, 0.5f, oms);
 	current_cri_packets.push_back(tmpPack);
 	_tmpIds++;
+}
+
+void Client::AddCommand(Command::EType commandType)
+{
+	//Command* tmpComm = new Command(commandType);
+	//commands_no_validated.push_back();
 }
 
 Client::Client()

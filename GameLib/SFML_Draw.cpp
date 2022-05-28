@@ -10,8 +10,6 @@ SFML_Draw::SFML_Draw(sf::Vector2f _playerPosition, float _velocity) : velocity(_
     myPlayerTex.setPosition(_playerPosition);
 
     window = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
-    //std::thread tDraw(&SFML_Draw::UpdateWindow, this);
-    //tDraw.detach();
 }
 
 SFML_Draw::~SFML_Draw()
@@ -21,132 +19,6 @@ SFML_Draw::~SFML_Draw()
 
 void SFML_Draw::UpdateWindow()
 {
-   
-
-    sf::Clock clock;
-
-    while (window->isOpen())
-    {
-
-        delta = clock.restart().asSeconds();
-
-        // check all the window's events that were triggered since the last iteration of the loop
-        sf::Event event;
-        while (window->pollEvent(event))
-        {
-            // "close requested" event: we close the window
-            if (event.type == sf::Event::Closed)
-                window->close();
-
-            if (event.type == sf::Event::KeyPressed)
-            {
-
-                if (event.key.code == sf::Keyboard::W)
-                {
-                    //_playerDirection->y = -_velocity * delta;
-                    direction.y = -velocity;
-                }
-                else if (event.key.code == sf::Keyboard::S)
-                {
-                    //_playerDirection->y = _velocity * delta;
-                    direction.y = velocity;
-                }
-
-
-                if (event.key.code == sf::Keyboard::A)
-                {
-                    //_playerDirection->x = -_velocity * delta;
-                    direction.x = -velocity;
-                }
-                else if (event.key.code == sf::Keyboard::D)
-                {
-                    //_playerDirection->x = _velocity * delta;
-                    direction.x = velocity;
-                }
-
-                if (event.key.code == sf::Keyboard::Left && !shootKeyPreesed)
-                {
-                    AddProjectile(20.f, 20.f, myPlayerTex.getPosition().x, myPlayerTex.getPosition().y, -1.0f, 0.0f, delta);
-                    shootKeyPreesed = true;
-                }
-                else if (event.key.code == sf::Keyboard::Right && !shootKeyPreesed)
-                {
-                    AddProjectile(20.f, 20.f, myPlayerTex.getPosition().x, myPlayerTex.getPosition().y, 1.0f, 0.0f, delta);
-                    shootKeyPreesed = true;
-                }
-                else if (event.key.code == sf::Keyboard::Up && !shootKeyPreesed)
-                {
-                    AddProjectile(20.f, 20.f, myPlayerTex.getPosition().x, myPlayerTex.getPosition().y, 0.0f, -1.0f, delta);
-                    shootKeyPreesed = true;
-                }
-                else if (event.key.code == sf::Keyboard::Down && !shootKeyPreesed)
-                {
-                    AddProjectile(20.f, 20.f, myPlayerTex.getPosition().x, myPlayerTex.getPosition().y, 0.0f, 1.0f, delta);
-                    shootKeyPreesed = true;
-                }
-
-            }
-
-            if (event.type == sf::Event::KeyReleased)
-            {
-                if (event.key.code == sf::Keyboard::W)
-                {
-                    direction.y = 0.0f;
-                }
-                else if(event.key.code == sf::Keyboard::S)
-                {
-                    direction.y = 0.0f;
-                }
-                
-                if (event.key.code == sf::Keyboard::A)
-                {
-                    direction.x = 0.0f;
-                }
-                else if (event.key.code == sf::Keyboard::D)
-                {
-                    direction.x = 0.0f;
-                }
-
-                if (event.key.code == sf::Keyboard::Left)
-                {
-
-                    shootKeyPreesed = false;
-                }
-                else if (event.key.code == sf::Keyboard::Right)
-                {
-
-                    shootKeyPreesed = false;
-                }
-                else if (event.key.code == sf::Keyboard::Up)
-                {
-
-                    shootKeyPreesed = false;
-                }
-                else if (event.key.code == sf::Keyboard::Down)
-                {
-
-                    shootKeyPreesed = false;
-                }
-            }
-
-        }
-        // clear the window with black color
-        window->clear(sf::Color::Black);
-
-        // draw everything here...
-        // window.draw(...);
-        
-        MovePlayer();
-        MoveProjectiles();
-
-        DrawSquares();
-        DrawPlayer();
-        DrawProjectiles();
-       
-
-        // end the current frame
-        window->display();
-    }
 }
 
 void SFML_Draw::DrawSquares()
@@ -168,9 +40,9 @@ void SFML_Draw::AddSquare(float _sizeX, float _sizeY)
     squares.push_back(rectangle);
 }
 
-void SFML_Draw::MovePlayer()
+void SFML_Draw::MovePlayer(sf::Vector2f newPos)
 {
-    myPlayerTex.move(direction.x * delta, direction.y * delta);
+    myPlayerTex.move(newPos.x * delta, newPos.y * delta);
 }
 
 sf::Vector2f SFML_Draw::GetSquarepos(int _squareID)
@@ -191,6 +63,16 @@ void SFML_Draw::DeleteSquare(int _squareID)
 sf::RenderWindow* SFML_Draw::GetWindow()
 {
     return window;
+}
+
+float SFML_Draw::GetDelta()
+{
+    return delta;
+}
+
+void SFML_Draw::SetDelta(float _delta)
+{
+    delta = _delta;
 }
 
 void SFML_Draw::AddProjectile(float _sizeX, float _sizeY, float _positionX, float _positionY, float _directionX, float _directionY, float _delta)
@@ -229,4 +111,9 @@ void SFML_Draw::DrawProjectiles()
     {
         window->draw(projectile.GetTexture());
     }
+}
+
+sf::RectangleShape SFML_Draw::GetPlayerTex()
+{
+    return myPlayerTex;
 }

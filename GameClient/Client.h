@@ -9,7 +9,6 @@
 #include "Protocol.h"
 #include "Player.h"
 #include "ConsoleControl.h"
-#include "Command.h"
 
 class Client
 {
@@ -27,7 +26,7 @@ class Client
 	int _tmpIds = 0;
 	
 	// Commands
-	std::vector<Command*> commands;
+	std::vector<Command*> commands_no_validated;
 	
 	// Player
 	Player *player = new Player(150, 100 , 100.0f);
@@ -48,8 +47,11 @@ class Client
 	void Disconnect();
 	void DisconnectWithoutNotify();
 
-	// Add current packets
+	// Add packets
 	void AddCriticPacket(OutputMemoryStream *oms);
+	void AddCommand(Command::EType commandType);
+
+	// Delete packets
 	void DeleteCriticPacket(int id);
 
 public:
