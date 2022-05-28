@@ -4,8 +4,9 @@
 #include <queue>
 #include "Constants.h"
 #include "Tables.h"
-#include "Utils.h"
 #include "Protocol.h"
+#include "Game.h"
+#include "Utils.h"
 
 class Server
 {
@@ -13,6 +14,7 @@ class Server
 	UdpSocket* socket; // Main socket
 	std::vector<New_Connection*> new_con_table; // current new connections
 	std::vector<Active_Connection*> active_con_table; // current active connections 
+	std::vector<Game*> games;
 
 	// Check if is new  client
 	bool IsNewClient(unsigned short _clientID);
@@ -38,6 +40,7 @@ class Server
 	void UpdateClientTimer(int port);
 
 public:
+
 	Server();
 	~Server();
 

@@ -79,7 +79,7 @@ void Client::Receive()
 			
 			case Protocol::STP::HELLO_CLIENT:
 			{
-				phase = EPhase::CHAT;
+				phase = EPhase::MENU;
 				std::string helloMessage = ims.ReadString();
 				std::cout << helloMessage << std::endl;
 			}
@@ -124,18 +124,13 @@ void Client::SendCommands()
 	{
 		if (timer.ElapsedSeconds() > T_SEND_COMMANDS)
 		{
-			for (Command* c : commands_no_validated)
+			if (!commands_no_validated.empty())
 			{
-				std::queue<Command::EType> tmpComandTypes = c->type;
-				while (!tmpComandTypes.empty())
-				{
-
-					tmpComandTypes.pop();
-				}
-
-				std::queue<int> tmpCommandTypes = static_cast<std::queue<Command::EType>>(c->type);
-
-				Send(Protocol::Send(Protocol::PTS::COMMAND, , c->id, player->GetPlayerPos().x, player->GetPlayerPos().y));
+				//for (Command* c : commands_no_validated)
+				//{
+				//	std::queue<int> tmpCommandTypes = convert(c->type);
+				//	Send(Protocol::Send(Protocol::PTS::COMMAND, tmpCommandTypes, c->id, player->GetPlayerPos().x, player->GetPlayerPos().y));
+				//}
 			}
 
 			timer.Start();
@@ -249,7 +244,23 @@ Client::~Client()
 
 void Client::Update()
 {
-	if (phase == EPhase::CHAT)
+	switch (phase)
+	{
+	case EPhase::MENU:
+	{
+		std::cout << "JOIN GAME | Type [Y] | 'e' to exit" << std::endl;
+		auto future = std::async(std::launch::async, GetLineFromCin);
+		std::string message = future.get();
+		
+		if (message.size() > 0) {
+			
+			Send(Protocol::Send(Protocol::PTS::JOIN_GAME, message));
+			DisconnectFromGetline(message);
+			message.clear();
+		}
+	}
+		break;
+	case EPhase::GAME:
 	{
 		std::cout << "CHAT" << std::endl;
 		std::cout << "Write something";
@@ -258,12 +269,14 @@ void Client::Update()
 		std::string message = future.get();
 
 		if (message.size() > 0) {
-			
-			Send(Protocol::Send(Protocol::PTS::CHAT,message));
+
+			Send(Protocol::Send(Protocol::PTS::CHAT, message));
 
 			DisconnectFromGetline(message);
 			message.clear();
 		}
+	}
+		break;
 	}
 	
 	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();

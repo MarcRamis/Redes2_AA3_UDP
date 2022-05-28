@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SFML_Draw.h"
-#include "Utils.h"
+#include "Command.h"
 
 class Player
 {

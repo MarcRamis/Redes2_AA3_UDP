@@ -8,10 +8,11 @@
 #include "Protocol.h"
 #include "Player.h"
 #include "ConsoleControl.h"
+#include "Utils.h"
 
 class Client
 {
-	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, CHAT, GAME};
+	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, MENU, GAME};
 	EPhase phase = EPhase::REQUEST_CON;
 	bool isOpen = true;
 	UdpSocket* socket;
@@ -23,11 +24,13 @@ class Client
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
 	int _tmpIds = 0;
+	// Commands no validated to send
 	std::vector<Command*> commands_no_validated;
 	int _tmpCommIds = 0;
-
+	
 	// Player
-	Player *player = new Player(150, 100 , 100.0f);
+	//Player *player = new Player(150, 100 , 100.0f);
+	Player *player;
 
 	// Init
 	void WelcomeMessage();

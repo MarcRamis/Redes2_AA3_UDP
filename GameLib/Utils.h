@@ -1,10 +1,9 @@
 #pragma once
 
+#include <iostream>
 #include <algorithm>
 #include <future>
 #include <string>
-
-#include "Command.h"
 
 static std::string GetLineFromCin() {
 
@@ -44,11 +43,13 @@ static unsigned int CombineSalts(unsigned int saltClient, unsigned int saltServe
 	return saltClient && saltServer;
 }
 
-std::vector<Command::EType> convert(std::vector<int> const& in) {
-	std::vector<Command::EType> out;
-	out.reserve(in.size());
-	
-	std::transform(in.begin(), in.end(), std::back_inserter(out),
-		[](int n) { return static_cast<Command::EType>(n); });
-	return out;
-}
+//std::queue<int> convert(std::queue<Command::EType> in) {
+//	
+//	std::queue<int> out;
+//	while (!in.empty())
+//	{
+//		out.push(static_cast<int>(in.front()));
+//		in.pop();
+//	}
+//	return out;
+//}

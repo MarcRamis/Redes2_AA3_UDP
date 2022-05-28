@@ -8,10 +8,10 @@ static class Protocol
 public:
 	
 	// Client Headers -> Client to server
-	static enum class PTS { HELLO_SERVER, CHALLENGE_RESPONSE, CHAT, DISCONNECT_CLIENT, COMMAND };
+	static enum class PTS { HELLO_SERVER, CHALLENGE_RESPONSE, CHAT, DISCONNECT_CLIENT, COMMAND, JOIN_GAME };
 	
 	// Server Headers -> Server to peer
-	static enum class STP { CHALLENGE_REQUEST, HELLO_CLIENT, CHAT, DISCONNECT_CLIENT, CRI_PACK_RECEIVED, COMMAND};
+	static enum class STP { CHALLENGE_REQUEST, HELLO_CLIENT, CHAT, DISCONNECT_CLIENT, CRI_PACK_RECEIVED, COMMAND, CREATE_PLAYER};
 	
 	/* Client Functions -> Client to server |
 	Here it comes the data container that the user want to send */
