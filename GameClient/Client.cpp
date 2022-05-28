@@ -217,8 +217,7 @@ void Client::Update()
 		auto future = std::async(std::launch::async, GetLineFromCin);
 		std::string message = future.get();
 
-		std::cout << "waiting..." << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	player->Update();
 
 		if (message.size() > 0) {
 			
@@ -233,6 +232,8 @@ void Client::Update()
 	{
 		Disconnect();
 	}
+    
+    player->Update();
 }
 
 bool Client::GetClientOpen()

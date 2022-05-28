@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="Command.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SFML_Draw.h" />
     <ClInclude Include="Tables.h" />
@@ -165,6 +166,7 @@
   <ItemGroup>
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="Protocol.cpp" />
     <ClCompile Include="SFML_Draw.cpp" />
     <ClCompile Include="Tables.cpp" />

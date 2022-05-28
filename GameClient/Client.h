@@ -30,8 +30,8 @@ class Client
 	std::vector<Command*> commands;
 	
 	// Player
-	//Player *player = new Player;
-	
+	Player *player = new Player(150, 100 , 100.0f);
+
 	// Init
 	void WelcomeMessage();
 	
