@@ -4,6 +4,8 @@
 #include <future>
 #include <string>
 
+#include "Command.h"
+
 static std::string GetLineFromCin() {
 
 	std::string line;
@@ -40,4 +42,13 @@ static int GenerateChallenge()
 static unsigned int CombineSalts(unsigned int saltClient, unsigned int saltServer)
 {
 	return saltClient && saltServer;
+}
+
+std::vector<Command::EType> convert(std::vector<int> const& in) {
+	std::vector<Command::EType> out;
+	out.reserve(in.size());
+	
+	std::transform(in.begin(), in.end(), std::back_inserter(out),
+		[](int n) { return static_cast<Command::EType>(n); });
+	return out;
 }

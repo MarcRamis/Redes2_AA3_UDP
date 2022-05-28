@@ -5,7 +5,6 @@
 #include <UdpSocket.h>
 #include "Constants.h"
 #include "Tables.h"
-#include "Utils.h"
 #include "Protocol.h"
 #include "Player.h"
 #include "ConsoleControl.h"
@@ -24,7 +23,9 @@ class Client
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
 	int _tmpIds = 0;
-	
+	std::vector<Command*> commands_no_validated;
+	int _tmpCommIds = 0;
+
 	// Player
 	Player *player = new Player(150, 100 , 100.0f);
 
@@ -38,15 +39,18 @@ class Client
 	void Send(OutputMemoryStream *pack);
 	void SendCriticPacket();
 	void SendCommands();
-
+	
 	// Disconnect
 	void DisconnectFromGetline(std::string text);
 	void Disconnect();
 	void DisconnectWithoutNotify();
 
-	// Add packets
+	// Add critic packets
 	void AddCriticPacket(OutputMemoryStream *oms);
-	void AddCommand(Command::EType commandType);
+	void AddCommandList(std::queue<Command::EType> commType);
+	
+	// Save commands
+	void SaveCommands();
 
 	// Delete packets
 	void DeleteCriticPacket(int id);

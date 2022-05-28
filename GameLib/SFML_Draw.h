@@ -42,5 +42,6 @@ public:
 	void SetDelta(float _delta);
 
 	sf::RectangleShape GetPlayerTex();
+	sf::Vector2f GetPosition();
 };
 

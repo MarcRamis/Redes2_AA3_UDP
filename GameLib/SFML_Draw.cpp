@@ -117,3 +117,8 @@ sf::RectangleShape SFML_Draw::GetPlayerTex()
 {
     return myPlayerTex;
 }
+
+sf::Vector2f SFML_Draw::GetPosition()
+{
+    return myPlayerTex.getPosition();
+}

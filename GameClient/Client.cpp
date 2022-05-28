@@ -122,12 +122,20 @@ void Client::SendCommands()
 	Timer timer; timer.Start();
 	while (isOpen)
 	{
-		if (timer.ElapsedSeconds() > T_COMMANDS)
+		if (timer.ElapsedSeconds() > T_SEND_COMMANDS)
 		{
-			for (Command* c : commands)
+			for (Command* c : commands_no_validated)
 			{
-				Send(Protocol::Send(Protocol::PTS::COMMAND, static_cast<int>(c->type), 
-					player->GetPlayerPos().x, player->GetPlayerPos().y));
+				std::queue<Command::EType> tmpComandTypes = c->type;
+				while (!tmpComandTypes.empty())
+				{
+
+					tmpComandTypes.pop();
+				}
+
+				std::queue<int> tmpCommandTypes = static_cast<std::queue<Command::EType>>(c->type);
+
+				Send(Protocol::Send(Protocol::PTS::COMMAND, , c->id, player->GetPlayerPos().x, player->GetPlayerPos().y));
 			}
 
 			timer.Start();
@@ -180,10 +188,30 @@ void Client::AddCriticPacket(OutputMemoryStream *oms)
 	_tmpIds++;
 }
 
-void Client::AddCommand(Command::EType commandType)
+void Client::AddCommandList(std::queue<Command::EType> commType)
 {
-	//Command* tmpComm = new Command(commandType);
-	//commands_no_validated.push_back();
+	Command* command = new Command(_tmpCommIds, commType);
+	commands_no_validated.push_back(command);
+	_tmpCommIds++;
+	
+	std::cout << "Command list size: " << commands_no_validated.size() << std::endl;
+}
+
+void Client::SaveCommands()
+{
+	Timer timer; timer.Start();
+	while (isOpen)
+	{
+		if (timer.ElapsedSeconds() > T_SAVE_COMMANDS)
+		{
+			if (!player->tmp_Commands.empty())
+			{
+				AddCommandList(player->tmp_Commands);
+				player->ClearCommands();
+			}
+			timer.Start();
+		}
+	}
 }
 
 Client::Client()
@@ -207,6 +235,10 @@ Client::Client()
 	std::thread tSendCommands(&Client::SendCommands, this);
 	tSendCommands.detach();
 
+	// Thread to save commands
+	std::thread tSaveCommands(&Client::SaveCommands, this);
+	tSaveCommands.detach();
+
 	TS.Start(); // Inactivity start timer
 }
 
@@ -225,8 +257,6 @@ void Client::Update()
 		auto future = std::async(std::launch::async, GetLineFromCin);
 		std::string message = future.get();
 
-	player->Update();
-
 		if (message.size() > 0) {
 			
 			Send(Protocol::Send(Protocol::PTS::CHAT,message));
@@ -236,10 +266,7 @@ void Client::Update()
 		}
 	}
 	
-	if (TS.ElapsedSeconds() > T_INACTIVITY)
-	{
-		Disconnect();
-	}
+	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
     
     player->Update();
 }

@@ -32,6 +32,18 @@ OutputMemoryStream* Protocol::Send(PTS protocol, int id, int id2, int id3)
 	return oms;
 }
 
+OutputMemoryStream* Protocol::Send(PTS protocol, int id, int id2, int id3, int id4)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->Write(id);
+	oms->Write(id2);
+	oms->Write(id3);
+	oms->Write(id4);
+	
+	return oms;
+}
+
 OutputMemoryStream* Protocol::Send(PTS protocol)
 {
 	OutputMemoryStream* oms = new OutputMemoryStream();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UdpSocket.h"
+#include <queue>
 
 static class Protocol
 {
@@ -17,6 +18,7 @@ public:
 	static OutputMemoryStream *Send(PTS protocol, std::string str, std::string str2, int num);
 	static OutputMemoryStream *Send(PTS protocol, int id, int id2);
 	static OutputMemoryStream *Send(PTS protocol, int id, int id2, int id3);
+	static OutputMemoryStream *Send(PTS protocol, std::queue<int> id, int id2, int id3, int id4);
 	static OutputMemoryStream *Send(PTS protocol);
 	static OutputMemoryStream* Send(PTS protocol, std::string str);
 	

@@ -58,53 +58,54 @@ void Player::GetInputs()
 
         if (event.type == sf::Event::KeyPressed)
         {
-
+            // Move keys
             if (event.key.code == sf::Keyboard::W)
             {
-                //_playerDirection->y = -_velocity * delta;
                 direction.y = -velocity;
+                tmp_Commands.push(Command::EType::MOVE_UP);
             }
             else if (event.key.code == sf::Keyboard::S)
             {
-                //_playerDirection->y = _velocity * delta;
                 direction.y = velocity;
+                tmp_Commands.push(Command::EType::MOVE_DOWN);
             }
 
-
-            if (event.key.code == sf::Keyboard::A)
+            else if (event.key.code == sf::Keyboard::A)
             {
-                //_playerDirection->x = -_velocity * delta;
                 direction.x = -velocity;
+                tmp_Commands.push(Command::EType::MOVE_LEFT);
             }
             else if (event.key.code == sf::Keyboard::D)
             {
-                //_playerDirection->x = _velocity * delta;
                 direction.x = velocity;
+                tmp_Commands.push(Command::EType::MOVE_RIGHT);
             }
-
+            
+            // Shoot keys
             if (event.key.code == sf::Keyboard::Left && !shootKeyPressed)
             {
-                draw->AddProjectile(20.f, 20.f, draw->GetPlayerTex().getPosition().x, draw->GetPlayerTex().getPosition().y, -1.0f, 0.0f, draw->GetDelta());
-                shootKeyPressed = true;
+                Shoot(-1.f, 0.f);
+                tmp_Commands.push(Command::EType::SHOOT_LEFT);
             }
             else if (event.key.code == sf::Keyboard::Right && !shootKeyPressed)
             {
-                draw->AddProjectile(20.f, 20.f, draw->GetPlayerTex().getPosition().x, draw->GetPlayerTex().getPosition().y, 1.0f, 0.0f, draw->GetDelta());
-                shootKeyPressed = true;
+                Shoot(1.f, 0.f);
+                tmp_Commands.push(Command::EType::SHOOT_RIGHT);
             }
             else if (event.key.code == sf::Keyboard::Up && !shootKeyPressed)
             {
-                draw->AddProjectile(20.f, 20.f, draw->GetPlayerTex().getPosition().x, draw->GetPlayerTex().getPosition().y, 0.0f, -1.0f, draw->GetDelta());
-                shootKeyPressed = true;
+                Shoot(0.f, -1.f);
+                tmp_Commands.push(Command::EType::SHOOT_UP);
             }
             else if (event.key.code == sf::Keyboard::Down && !shootKeyPressed)
-            {
-                draw->AddProjectile(20.f, 20.f, draw->GetPlayerTex().getPosition().x, draw->GetPlayerTex().getPosition().y, 0.0f, 1.0f, draw->GetDelta());
-                shootKeyPressed = true;
+            {   
+                Shoot(0.f, 1.f);
+                tmp_Commands.push(Command::EType::SHOOT_DOWN);
             }
 
         }
 
+        // Stop movement
         if (event.type == sf::Event::KeyReleased)
         {
             if (event.key.code == sf::Keyboard::W)
@@ -150,7 +151,22 @@ void Player::GetInputs()
     }
 }
 
+void Player::Shoot(float dirX, float dirY)
+{
+    draw->AddProjectile(20.f, 20.f,
+        draw->GetPlayerTex().getPosition().x, 
+        draw->GetPlayerTex().getPosition().y, dirX, dirY, draw->GetDelta());
+    shootKeyPressed = true;
+}
+
+void Player::ClearCommands()
+{
+    std::queue<Command::EType> empty;
+    std::swap(tmp_Commands, empty);
+    std::cout << "Clear size: " << tmp_Commands.size() << std::endl;
+}
+
 sf::Vector2f Player::GetPlayerPos()
 {
-	return draw->GetSquarepos(0);
+    return draw->GetPosition();
 }
