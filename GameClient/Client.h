@@ -25,11 +25,11 @@ class Client
 	std::vector<Pack*> current_cri_packets;
 	int _tmpIds = 0;
 	// Commands no validated to send
-	std::vector<Command*> commands_no_validated;
+	std::vector<CommandList*> commands_no_validated;
 	int _tmpCommIds = 0;
 	
 	// Player
-	//Player *player = new Player(150, 100 , 100.0f);
+	//Player *player = new Player(150, 100, 100.0f);
 	Player *player;
 
 	// Init
@@ -50,7 +50,7 @@ class Client
 
 	// Add critic packets
 	void AddCriticPacket(OutputMemoryStream *oms);
-	void AddCommandList(std::queue<Command::EType> commType);
+	void AddCommandList(std::queue<CommandList::EType> commType);
 	
 	// Save commands
 	void SaveCommands();

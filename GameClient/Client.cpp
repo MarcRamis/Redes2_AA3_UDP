@@ -183,9 +183,9 @@ void Client::AddCriticPacket(OutputMemoryStream *oms)
 	_tmpIds++;
 }
 
-void Client::AddCommandList(std::queue<Command::EType> commType)
+void Client::AddCommandList(std::queue<CommandList::EType> commType)
 {
-	Command* command = new Command(_tmpCommIds, commType);
+	CommandList* command = new CommandList(_tmpCommIds, commType);
 	commands_no_validated.push_back(command);
 	_tmpCommIds++;
 	
@@ -254,7 +254,7 @@ void Client::Update()
 		
 		if (message.size() > 0) {
 			
-			Send(Protocol::Send(Protocol::PTS::JOIN_GAME, message));
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::JOIN_GAME));
 			DisconnectFromGetline(message);
 			message.clear();
 		}
@@ -270,8 +270,7 @@ void Client::Update()
 
 		if (message.size() > 0) {
 
-			Send(Protocol::Send(Protocol::PTS::CHAT, message));
-
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
 			DisconnectFromGetline(message);
 			message.clear();
 		}

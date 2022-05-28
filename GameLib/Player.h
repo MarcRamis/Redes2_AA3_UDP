@@ -14,7 +14,7 @@ class Player
 public:
 	
 	// Commands
-	std::queue<Command::EType> tmp_Commands;
+	std::queue<CommandList::EType> tmp_Commands;
 
 	Player();
 	Player(float _posX, float _posY, float _velocity);
@@ -26,5 +26,6 @@ public:
 	void ClearCommands();
 
 	sf::Vector2f GetPlayerPos();
+	void SetPlayerPos(sf::Vector2f newPos);
 };
 

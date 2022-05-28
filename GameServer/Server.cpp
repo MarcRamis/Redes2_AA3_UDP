@@ -337,6 +337,7 @@ void Server::Update()
 			break;
 		case Protocol::PTS::COMMAND:
 			break;
+
 		case Protocol::PTS::JOIN_GAME:
 			break;
 		}

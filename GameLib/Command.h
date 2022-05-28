@@ -2,7 +2,7 @@
 
 #include <queue>
 
-class Command
+class CommandList
 {
 	
 public:
@@ -13,6 +13,6 @@ public:
 	int id;
 	std::queue<EType> type;
 	
-	Command() {};
-	Command(int _id, std::queue<EType> _type) : id(_id), type(_type) {};
+	CommandList() {};
+	CommandList(int _id, std::queue<EType> _type) : id(_id), type(_type) {};
 };

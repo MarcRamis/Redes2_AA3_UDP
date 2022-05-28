@@ -62,45 +62,45 @@ void Player::GetInputs()
             if (event.key.code == sf::Keyboard::W)
             {
                 direction.y = -velocity;
-                tmp_Commands.push(Command::EType::MOVE_UP);
+                tmp_Commands.push(CommandList::EType::MOVE_UP);
             }
             else if (event.key.code == sf::Keyboard::S)
             {
                 direction.y = velocity;
-                tmp_Commands.push(Command::EType::MOVE_DOWN);
+                tmp_Commands.push(CommandList::EType::MOVE_DOWN);
             }
 
             else if (event.key.code == sf::Keyboard::A)
             {
                 direction.x = -velocity;
-                tmp_Commands.push(Command::EType::MOVE_LEFT);
+                tmp_Commands.push(CommandList::EType::MOVE_LEFT);
             }
             else if (event.key.code == sf::Keyboard::D)
             {
                 direction.x = velocity;
-                tmp_Commands.push(Command::EType::MOVE_RIGHT);
+                tmp_Commands.push(CommandList::EType::MOVE_RIGHT);
             }
             
             // Shoot keys
             if (event.key.code == sf::Keyboard::Left && !shootKeyPressed)
             {
                 Shoot(-1.f, 0.f);
-                tmp_Commands.push(Command::EType::SHOOT_LEFT);
+                tmp_Commands.push(CommandList::EType::SHOOT_LEFT);
             }
             else if (event.key.code == sf::Keyboard::Right && !shootKeyPressed)
             {
                 Shoot(1.f, 0.f);
-                tmp_Commands.push(Command::EType::SHOOT_RIGHT);
+                tmp_Commands.push(CommandList::EType::SHOOT_RIGHT);
             }
             else if (event.key.code == sf::Keyboard::Up && !shootKeyPressed)
             {
                 Shoot(0.f, -1.f);
-                tmp_Commands.push(Command::EType::SHOOT_UP);
+                tmp_Commands.push(CommandList::EType::SHOOT_UP);
             }
             else if (event.key.code == sf::Keyboard::Down && !shootKeyPressed)
             {   
                 Shoot(0.f, 1.f);
-                tmp_Commands.push(Command::EType::SHOOT_DOWN);
+                tmp_Commands.push(CommandList::EType::SHOOT_DOWN);
             }
 
         }
@@ -161,7 +161,7 @@ void Player::Shoot(float dirX, float dirY)
 
 void Player::ClearCommands()
 {
-    std::queue<Command::EType> empty;
+    std::queue<CommandList::EType> empty;
     std::swap(tmp_Commands, empty);
     std::cout << "Clear size: " << tmp_Commands.size() << std::endl;
 }
@@ -169,4 +169,8 @@ void Player::ClearCommands()
 sf::Vector2f Player::GetPlayerPos()
 {
     return draw->GetPosition();
+}
+void Player::SetPlayerPos(sf::Vector2f newPos)
+{
+    draw->GetPlayerTex().setPosition(newPos);
 }

@@ -37,7 +37,7 @@ struct Active_Connection {
 	int serverSALT;
 	
 	Timer TS; // Almacena el TS del último pkt recibido
-	std::queue<Command*> current_commands; // current commands received from player
+	std::queue<CommandList*> current_commands; // current commands received from player
 
 	Active_Connection(unsigned short _port, std::string _address, int _clientSALT, int _serverSALT);
 	~Active_Connection();
