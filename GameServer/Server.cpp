@@ -195,14 +195,19 @@ bool Server::GetServerOpen()
 	return isOpen;
 }
 
+void Server::CreateGame(int _port)
+{
+	Game* newGame = new Game();
+	newGame->GenPlayers(_port);
+	games.push_back(newGame);
+}
+
 void Server::Update()
 {
 	// Receive message
 	InputMemoryStream ims = *socket->Receive();
 	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
-	{
-		std::cout << "Active client size: " << active_con_table.size() << std::endl;
-		
+	{	
 		//Update client timer
 		UpdateClientTimer(socket->PortReceived());
 
@@ -231,6 +236,7 @@ void Server::Update()
 				New_Connection *newClient = new New_Connection(socket->PortReceived(), 
 					socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
 				newClient->TS.Start();
+				newClient->name = GenerateName(); // Gen random name
 				new_con_table.push_back(newClient);
 				
 				// Send critic packet confirmation
@@ -278,17 +284,17 @@ void Server::Update()
 					// Store the new client into active client
 					Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
 					act_con->TS.Start();
+					act_con->name = myClient->name;
 					active_con_table.push_back(act_con);
 					
 					// Delete it from the new clients
 					DeleteNewClients(*myClient);
-				
+					
 					// Send critic packet confirmation
 					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
 
-					// Send hello message to the client
-					Send(Protocol::Send(Protocol::STP::HELLO_CLIENT, 
-						"WELCOME MESSAGE | Hello client, welcome to the matrix. "), myClient->port);
+					// Send hello message to the 
+					Send(Protocol::Send(Protocol::STP::HELLO_CLIENT, act_con->name), myClient->port);
 				}
 				// Challenge answer is wrong
 				else
@@ -335,10 +341,25 @@ void Server::Update()
 
 			DisconnectClient(socket->PortReceived());
 			break;
+
 		case Protocol::PTS::COMMAND:
 			break;
 
 		case Protocol::PTS::JOIN_GAME:
+			std::string yConfirm = ims.ReadString();
+
+			// Confirmation
+			if (yConfirm == "Y" || yConfirm == "y")
+			{
+				// Generate new game if there is no game
+				if (games.empty()) {
+					CreateGame(socket->PortReceived());
+				}
+				else
+				{
+					// Find 
+				}
+			}
 			break;
 		}
 

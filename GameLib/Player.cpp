@@ -11,9 +11,10 @@ Player::Player()
 
 }
 
-Player::Player(float _posX, float _posY, float _velocity) : velocity(_velocity)
+Player::Player(float _posX, float _posY)
 {
-	draw = new SFML_Draw(sf::Vector2f(250.0f, 200.0f), velocity);
+    velocity = 100.f;
+	draw = new SFML_Draw(sf::Vector2f(_posX, _posY), velocity);
 }
 
 void Player::Update()
@@ -173,4 +174,19 @@ sf::Vector2f Player::GetPlayerPos()
 void Player::SetPlayerPos(sf::Vector2f newPos)
 {
     draw->GetPlayerTex().setPosition(newPos);
+}
+
+void Player::NewWindow()
+{
+    draw->NewWindow();
+}
+
+sf::RenderWindow* Player::GetWindow()
+{
+    return draw->GetWindow();
+}
+
+void Player::SetWindow(sf::RenderWindow* _window)
+{
+    draw->SetWindow(_window);
 }

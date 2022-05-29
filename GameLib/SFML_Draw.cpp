@@ -8,8 +8,6 @@ SFML_Draw::SFML_Draw(sf::Vector2f _playerPosition, float _velocity) : velocity(_
 {
     myPlayerTex = sf::RectangleShape(sf::Vector2f(50.f, 50.f));
     myPlayerTex.setPosition(_playerPosition);
-
-    window = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
 }
 
 SFML_Draw::~SFML_Draw()
@@ -63,6 +61,16 @@ void SFML_Draw::DeleteSquare(int _squareID)
 sf::RenderWindow* SFML_Draw::GetWindow()
 {
     return window;
+}
+
+void SFML_Draw::SetWindow(sf::RenderWindow* _window)
+{
+    window = _window;
+}
+
+void SFML_Draw::NewWindow()
+{
+    window = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
 }
 
 float SFML_Draw::GetDelta()

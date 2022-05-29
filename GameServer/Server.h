@@ -52,4 +52,6 @@ public:
 
 	// Update
 	void Update();
+
+	void CreateGame(int _port);
 };

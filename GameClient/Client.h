@@ -19,6 +19,7 @@ class Client
 	
 	// This has to change for the info that our client needs
 	New_Connection* new_con;
+	std::string myName;
 	Timer TS; // Time stamp from server
 	
 	// Critic packets to send

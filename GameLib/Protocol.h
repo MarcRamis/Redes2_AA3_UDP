@@ -20,7 +20,8 @@ public:
 	static OutputMemoryStream *Send(PTS protocol, int id, int id2, int id3);
 	static OutputMemoryStream *Send(PTS protocol, std::queue<int> id, int id2, int id3, int id4);
 	static OutputMemoryStream *Send(PTS protocol);
-	static OutputMemoryStream* Send(PTS protocol, std::string str);
+	static OutputMemoryStream *Send(PTS protocol, std::string str);
+	static OutputMemoryStream *Send(PTS protocol, std::string str, std::string str2);
 	
 	/* Server Functions -> Server to peer | 
 	Here it comes the data container that the user want to send */
@@ -29,4 +30,5 @@ public:
 	static OutputMemoryStream *Send(STP protocol);
 	static OutputMemoryStream *Send(STP protocol, int id, int id2);
 	static OutputMemoryStream *Send(STP protocol, std::string str, unsigned short id);
+	static OutputMemoryStream *Send(STP protocol, std::string str, std::string str2);
 };

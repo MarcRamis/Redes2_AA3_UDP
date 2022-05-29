@@ -38,6 +38,9 @@ public:
 	void DrawProjectiles();
 
 	sf::RenderWindow* GetWindow();
+	void SetWindow(sf::RenderWindow* _window);
+	void NewWindow();
+
 	float GetDelta();
 	void SetDelta(float _delta);
 

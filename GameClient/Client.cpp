@@ -79,9 +79,10 @@ void Client::Receive()
 			
 			case Protocol::STP::HELLO_CLIENT:
 			{
+				myName = ims.ReadString();
+				std::cout << "WELCOME MESSAGE | Hello " + myName + ", welcome to the matrix. " << myName << std::endl;
+				
 				phase = EPhase::MENU;
-				std::string helloMessage = ims.ReadString();
-				std::cout << helloMessage << std::endl;
 			}
 			break;
 			case Protocol::STP::DISCONNECT_CLIENT:
@@ -226,13 +227,13 @@ Client::Client()
 	std::thread tSend(&Client::SendCriticPacket, this);
 	tSend.detach();
 	
-	// Thread to send commands
-	std::thread tSendCommands(&Client::SendCommands, this);
-	tSendCommands.detach();
-
-	// Thread to save commands
-	std::thread tSaveCommands(&Client::SaveCommands, this);
-	tSaveCommands.detach();
+	//// Thread to send commands
+	//std::thread tSendCommands(&Client::SendCommands, this);
+	//tSendCommands.detach();
+	//
+	//// Thread to save commands
+	//std::thread tSaveCommands(&Client::SaveCommands, this);
+	//tSaveCommands.detach();
 
 	TS.Start(); // Inactivity start timer
 }
@@ -254,7 +255,7 @@ void Client::Update()
 		
 		if (message.size() > 0) {
 			
-			if (message != "e") Send(Protocol::Send(Protocol::PTS::JOIN_GAME));
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::JOIN_GAME, message));
 			DisconnectFromGetline(message);
 			message.clear();
 		}
@@ -274,13 +275,14 @@ void Client::Update()
 			DisconnectFromGetline(message);
 			message.clear();
 		}
+
+		player->Update();
 	}
 		break;
 	}
 	
 	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
     
-    player->Update();
 }
 
 bool Client::GetClientOpen()

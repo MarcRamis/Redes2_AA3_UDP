@@ -13,11 +13,12 @@ class Player
 
 public:
 	
+	int port;
 	// Commands
 	std::queue<CommandList::EType> tmp_Commands;
 
 	Player();
-	Player(float _posX, float _posY, float _velocity);
+	Player(float _posX, float _posY);
 
 	void Update();
 	void GetInputs();
@@ -27,5 +28,9 @@ public:
 
 	sf::Vector2f GetPlayerPos();
 	void SetPlayerPos(sf::Vector2f newPos);
+
+	void NewWindow();
+	sf::RenderWindow* GetWindow();
+	void SetWindow(sf::RenderWindow* _window);
 };
 
