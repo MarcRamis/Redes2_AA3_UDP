@@ -19,6 +19,7 @@ class Player
 	sf::Vector2f direction;
 
 	bool shootKeyPressed = false;
+	bool moveKeyPressed = false;
 
 public:
 	
