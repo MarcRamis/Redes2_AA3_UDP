@@ -7,7 +7,7 @@
 
 class SFML_Draw
 {
-	sf::RenderWindow* window;
+	sf::RenderWindow* window = nullptr;
 
 	sf::RectangleShape myPlayerTex;
 	

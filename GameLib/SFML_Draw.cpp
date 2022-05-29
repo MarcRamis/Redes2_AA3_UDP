@@ -60,7 +60,8 @@ void SFML_Draw::DeleteSquare(int _squareID)
 
 sf::RenderWindow* SFML_Draw::GetWindow()
 {
-    return window;
+    if (window == nullptr) return nullptr;
+    else return window;
 }
 
 void SFML_Draw::SetWindow(sf::RenderWindow* _window)

@@ -183,7 +183,8 @@ void Player::NewWindow()
 
 sf::RenderWindow* Player::GetWindow()
 {
-    return draw->GetWindow();
+    if (draw->GetWindow() == nullptr) return nullptr;
+    else return draw->GetWindow();
 }
 
 void Player::SetWindow(sf::RenderWindow* _window)
