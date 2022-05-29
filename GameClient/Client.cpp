@@ -93,8 +93,8 @@ void Client::Receive()
 				break;
 			case Protocol::STP::JOIN_GAME:
 				
-				int posX, posY; ims.Read(&posX); ims.Read(&posY);
-				CreateGame(posX, posY);
+				/*int posX, posY;*/ ims.Read(&posX); ims.Read(&posY);
+				
 				
 				phase = EPhase::GAME;
 				break;
@@ -288,7 +288,12 @@ void Client::Update()
 		//	DisconnectFromGetline(message);
 		//	message.clear();
 		//}
-
+		if (!creategame)
+		{
+			CreateGame(posX, posY);
+			creategame = true;
+		}
+		
 	}
 		break;
 	}

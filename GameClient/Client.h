@@ -32,6 +32,9 @@ class Client
 	// Player
 	//Player *player = new Player(150, 100);
 	Player *player;
+	int posX, posY;
+
+	bool creategame = false;
 
 	// Init
 	void WelcomeMessage();
