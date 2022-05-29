@@ -12,7 +12,7 @@
 
 class Client
 {
-	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, MENU, GAME};
+	enum class EPhase{ REQUEST_CON, CHALLENGE_RECEIVED, MENU, CREATE_GAME, ADD_PLAYER, GAME};
 	EPhase phase = EPhase::REQUEST_CON;
 	bool isOpen = true;
 	UdpSocket* socket;
@@ -32,7 +32,8 @@ class Client
 	
 	// Player
 	Player *player;
-	int posX, posY;
+	float posX, posY;
+	unsigned short receivedPort;
 
 	bool creategame = false;
 	bool joinGame = false;
@@ -64,6 +65,7 @@ class Client
 	void DeleteCriticPacket(int id);
 
 	void CreateGame(int posX, int posY);
+	void Chat();
 
 public:
 	

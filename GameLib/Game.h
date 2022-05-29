@@ -2,15 +2,6 @@
 
 #include "Player.h"
 
-struct PlayerTex
-{
-	sf::RectangleShape* tex;
-	int port;
-	
-	PlayerTex() {};
-	PlayerTex(sf::RectangleShape* _tex, int _port) : tex(_tex), port(_port){};
-};
-
 class Game
 {
 

@@ -52,9 +52,10 @@ public:
 
 	// Receive Packets
 	void Receive();
-
+	
 	// Update
 	void Update();
+	void UpdateClientView(int _port);
 	
 	Game *CreateGame(int _port);
 };

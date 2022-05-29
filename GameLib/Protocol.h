@@ -11,7 +11,7 @@ public:
 	static enum class PTS { HELLO_SERVER, CHALLENGE_RESPONSE, CHAT, DISCONNECT_CLIENT, COMMAND, JOIN_GAME };
 	
 	// Server Headers -> Server to peer
-	static enum class STP { CHALLENGE_REQUEST, HELLO_CLIENT, CHAT, DISCONNECT_CLIENT, CRI_PACK_RECEIVED, COMMAND, JOIN_GAME};
+	static enum class STP { CHALLENGE_REQUEST, HELLO_CLIENT, CHAT, DISCONNECT_CLIENT, CRI_PACK_RECEIVED, COMMAND, JOIN_GAME, NEW_PLAYER};
 	
 	/* Client Functions -> Client to server |
 	Here it comes the data container that the user want to send */
@@ -29,6 +29,8 @@ public:
 	static OutputMemoryStream *Send(STP protocol, int id);
 	static OutputMemoryStream *Send(STP protocol);
 	static OutputMemoryStream *Send(STP protocol, int id, int id2);
+	static OutputMemoryStream *Send(STP protocol, float id, float id2);
+	static OutputMemoryStream *Send(STP protocol, float id, float id2, unsigned short id3);
 	static OutputMemoryStream *Send(STP protocol, std::string str, unsigned short id);
 	static OutputMemoryStream *Send(STP protocol, std::string str, std::string str2);
 };

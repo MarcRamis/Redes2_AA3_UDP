@@ -39,6 +39,11 @@ void Player::Update()
 
         draw->DrawSquares();
         draw->DrawPlayer();
+        for (PlayerTex *p : other_players)
+        {
+            std::cout << "draw client with port: " << p->port << std::endl;
+            draw->GetWindow()->draw(*p->tex);
+        }
         draw->DrawProjectiles();
         draw->DrawProjectiles(); 
 
@@ -202,4 +207,12 @@ bool Player::IsWindowActive()
     {
         return draw->IsWindowActive();
     }
+}
+
+void Player::AddNewPlayer(int posX, int posY, int _port)
+{
+    PlayerTex* p = new PlayerTex(new sf::RectangleShape(sf::Vector2f(50, 50)), _port);
+    p->tex->setPosition(posX, posY);
+    other_players.push_back(p);
+    std::cout << "añdidod" << std::endl;
 }

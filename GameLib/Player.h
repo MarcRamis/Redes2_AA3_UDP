@@ -3,6 +3,15 @@
 #include "SFML_Draw.h"
 #include "Command.h"
 
+struct PlayerTex
+{
+	sf::RectangleShape* tex;
+	int port;
+
+	PlayerTex() {};
+	PlayerTex(sf::RectangleShape* _tex, int _port) : tex(_tex), port(_port) {};
+};
+
 class Player
 {
 	SFML_Draw* draw = nullptr;
@@ -15,6 +24,9 @@ public:
 	
 	// Commands
 	std::queue<CommandList::EType> tmp_Commands;
+	
+	// Other players
+	std::vector<PlayerTex*> other_players;
 
 	Player();
 	Player(float _posX, float _posY);
@@ -33,5 +45,6 @@ public:
 	void SetWindow(sf::RenderWindow* _window);
 
 	bool IsWindowActive();
-};
 
+	void AddNewPlayer(int posX, int posY, int _port);
+};

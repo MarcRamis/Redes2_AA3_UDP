@@ -45,7 +45,7 @@ static unsigned int CombineSalts(unsigned int saltClient, unsigned int saltServe
 
 static std::string GenerateName()
 {
-	std::string names[] = { "Bob", "Marc", "Joel", "Alex", "Zeta", "Jose" , "Paul", "Pere"};
+	std::string names[] = { "Bob", "Marc", "Joel", "Alex", "Eric", "Jose" , "Paul", "Pere"};
 
 	int i;
 	i = rand() % 8;

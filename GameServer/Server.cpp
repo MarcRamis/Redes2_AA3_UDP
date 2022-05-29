@@ -115,20 +115,26 @@ void Server::CheckInactivity()
 {
 	while (isOpen)
 	{
-		for (New_Connection *nConn : new_con_table)
+		if (!new_con_table.empty())
 		{
-			if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
+			for (New_Connection* nConn : new_con_table)
 			{
-				DisconnectClient(nConn->port);
-				Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
+				if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
+				{
+					DisconnectClient(nConn->port);
+					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
+				}
 			}
 		}
-		for (Active_Connection* aConn : active_con_table)
+		if (!active_con_table.empty())
 		{
-			if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
+			for (Active_Connection* aConn : active_con_table)
 			{
-				DisconnectClient(aConn->port);
-				Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
+				if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
+				{
+					DisconnectClient(aConn->port);
+					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
+				}
 			}
 		}
 	}
@@ -209,6 +215,8 @@ Game *Server::CreateGame(int _port)
 
 void Server::Receive()
 {
+	//srand(time(NULL));
+
 	while (isOpen)
 	{
 		// Receive message
@@ -422,8 +430,9 @@ void Server::Receive()
 												Send(Protocol::Send(Protocol::STP::JOIN_GAME,
 													p->tex->getPosition().x, p->tex->getPosition().y), p->port);
 												
-												// Advice other clients
-
+												// Update my view
+												//UpdateClientView(socket->PortReceived());
+												
 											}
 											// Create game
 											else
@@ -453,4 +462,27 @@ void Server::Receive()
 
 void Server::Update()
 {
+}
+
+void Server::UpdateClientView(int _port)
+{
+	for (Game *g : games)
+	{
+		for (PlayerTex *p : g->players)
+		{
+			if (p->port == _port)
+			{
+				for (PlayerTex* p : g->players)
+				{
+					if (p->port != _port)
+					{
+						Send(Protocol::Send(Protocol::STP::NEW_PLAYER, 
+							p->tex->getPosition().x, p->tex->getPosition().y, p->port), _port);
+					}
+				}
+
+				break;
+			}
+		}
+	}
 }

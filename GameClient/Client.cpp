@@ -44,7 +44,6 @@ void Client::Receive()
 			// Receive header
 			int _header; ims.Read(&_header);
 
-
 			// Find header
 			switch (static_cast<Protocol::STP>(_header))
 			{
@@ -105,7 +104,15 @@ void Client::Receive()
 			case Protocol::STP::JOIN_GAME:
 				
 				ims.Read(&posX); ims.Read(&posY);
-				phase = EPhase::GAME;
+				phase = EPhase::CREATE_GAME;
+
+				break;
+				
+			case Protocol::STP::NEW_PLAYER:
+				
+				ims.Read(&posX); ims.Read(&posY); ims.Read(&receivedPort);
+				std::cout << "recibo" << posX << "-" << posY << "-" << receivedPort << std::endl;
+				phase = EPhase::ADD_PLAYER;
 
 				break;
 			}
@@ -284,6 +291,22 @@ Client::~Client()
 	Disconnect();
 }
 
+void Client::Chat()
+{
+	std::cout << "CHAT";
+	std::cout << " | Write something";
+	std::cout << " | 'e' to exit" << std::endl;
+	auto future = std::async(std::launch::async, GetLineFromCin);
+	std::string message = future.get();
+
+	if (message.size() > 0) {
+
+		if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
+		DisconnectFromGetline(message);
+		message.clear();
+	}
+}
+
 void Client::Update()
 {
 	switch (phase)
@@ -303,28 +326,27 @@ void Client::Update()
 		}
 	}
 		break;
-	case EPhase::GAME:
-	{
-		std::cout << "CHAT";
-		std::cout << " | Write something";
-		std::cout << " | 'e' to exit" << std::endl;
-		auto future = std::async(std::launch::async, GetLineFromCin);
-		std::string message = future.get();
-		
-		if (message.size() > 0) {
-		
-			if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
-			DisconnectFromGetline(message);
-			message.clear();
-		}
-		
+	case EPhase::CREATE_GAME:
+	{	
 		if (!creategame)
 		{
 			CreateGame(posX, posY);
 			creategame = true;
 		}
-
+		phase = EPhase::GAME;
 	}
+		break;
+	case EPhase::ADD_PLAYER:
+
+		std::cout << "player joining" << std::endl;
+		player->AddNewPlayer(posX, posY, receivedPort);
+		std::cout << "player joined" << std::endl;
+
+		phase = EPhase::GAME;
+		break;
+
+	case EPhase::GAME:
+		Chat();
 		break;
 	}
 	

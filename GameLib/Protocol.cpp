@@ -111,6 +111,27 @@ OutputMemoryStream *Protocol::Send(STP protocol, int id, int id2)
 	return oms;
 }
 
+OutputMemoryStream* Protocol::Send(STP protocol, float id, float id2)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->Write(id);
+	oms->Write(id2);
+
+	return oms;
+}
+
+OutputMemoryStream* Protocol::Send(STP protocol, float id, float id2, unsigned short id3)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->Write(id);
+	oms->Write(id2);
+	oms->Write(id3);
+
+	return oms;
+}
+
 OutputMemoryStream *Protocol::Send(STP protocol, std::string str, unsigned short id)
 {
 	OutputMemoryStream* oms = new OutputMemoryStream();
