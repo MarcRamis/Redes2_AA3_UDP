@@ -126,6 +126,7 @@ void Server::CheckInactivity()
 				}
 			}
 		}
+		
 		if (!active_con_table.empty())
 		{
 			for (Active_Connection* aConn : active_con_table)
@@ -366,23 +367,28 @@ void Server::Receive()
 				{
 					if (conn->port == socket->PortReceived())
 					{
+						std::cout << "a" << std::endl;
 						int sizeCommandList; ims.Read(&sizeCommandList);
+						std::cout << "size command list" << std::endl;
 						for (int i = 0; i < sizeCommandList; i++)
 						{
 							std::queue<CommandList::EType> tmpCommandListTypes;
 
 							int sizeCommandListTypes; ims.Read(&sizeCommandListTypes);
+							std::cout << "command list types" << std::endl;
 							
 							for (int j = 0; j < sizeCommandListTypes; j++)
 							{
 								int tmpCommand; ims.Read(&tmpCommand);
 								tmpCommandListTypes.push(static_cast<CommandList::EType>(tmpCommand));
+								std::cout << "push to tmp command list types" << std::endl;
 							}
 							int tmpIdList; ims.Read(&tmpIdList);
 							int posX; int posY; ims.Read(&posX); ims.Read(&posY);
 						
 							CommandList* tmpCommandList = new CommandList(tmpIdList, tmpCommandListTypes);
 							conn->current_commands.push(tmpCommandList);
+							std::cout << "push to command list" << std::endl;
 						}
 
 						std::cout << "Command list size: " << conn->current_commands.size() << std::endl;

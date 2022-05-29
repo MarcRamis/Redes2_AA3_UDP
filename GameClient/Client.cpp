@@ -170,6 +170,8 @@ void Client::SendCommands()
 				}
 				
 				socket->Send(oms, SERVER_IP);
+				
+				commands_no_validated.clear();
 			}
 
 			timer.Start();

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <UdpSocket.h>
 #include <queue>
+#include <mutex>
+
+#include <UdpSocket.h>
 #include "Constants.h"
 #include "Tables.h"
 #include "Protocol.h"
