@@ -1,10 +1,12 @@
 #pragma once
 
 #include <UdpSocket.h>
+#include <queue>
 #include "Constants.h"
 #include "Tables.h"
-#include "Utils.h"
 #include "Protocol.h"
+#include "Game.h"
+#include "Utils.h"
 
 class Server
 {
@@ -12,7 +14,8 @@ class Server
 	UdpSocket* socket; // Main socket
 	std::vector<New_Connection*> new_con_table; // current new connections
 	std::vector<Active_Connection*> active_con_table; // current active connections 
-	
+	std::vector<Game*> games;
+
 	// Check if is new  client
 	bool IsNewClient(unsigned short _clientID);
 	
@@ -23,7 +26,7 @@ class Server
 	// This search the client combined salt with the server combined salt of that client
 	New_Connection* SearchNewClientBySalt(unsigned int _clientCombSalt);
 	Active_Connection* SearchActiveClientBySalt(unsigned int _clientCombSalt); 
-	
+
 	//Send packets
 	void Send(OutputMemoryStream *pack, int port);
 
@@ -37,6 +40,7 @@ class Server
 	void UpdateClientTimer(int port);
 
 public:
+
 	Server();
 	~Server();
 
@@ -46,6 +50,12 @@ public:
 
 	// Setters
 
+	// Receive Packets
+	void Receive();
+	
 	// Update
 	void Update();
+	void UpdateClientView(int _port);
+	
+	Game *CreateGame(int _port);
 };

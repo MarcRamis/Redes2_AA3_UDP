@@ -1,5 +1,16 @@
 #include "Client.h"
 
+std::queue<int> convert(std::queue<CommandList::EType> in) {
+	
+	std::queue<int> out;
+	while (!in.empty())
+	{
+		out.push(static_cast<int>(in.front()));
+		in.pop();
+	}
+	return out;
+}
+
 void Client::WelcomeMessage()
 {
 	unsigned short port = CLIENT_IP_START;
@@ -32,7 +43,6 @@ void Client::Receive()
 			
 			// Receive header
 			int _header; ims.Read(&_header);
-
 
 			// Find header
 			switch (static_cast<Protocol::STP>(_header))
@@ -79,9 +89,11 @@ void Client::Receive()
 			
 			case Protocol::STP::HELLO_CLIENT:
 			{
-				phase = EPhase::CHAT;
-				std::string helloMessage = ims.ReadString();
-				std::cout << helloMessage << std::endl;
+				
+				myName = ims.ReadString();
+				std::cout << "WELCOME MESSAGE | Hello " + myName + ", welcome to the matrix. " << std::endl;
+				
+				phase = EPhase::MENU;
 			}
 			break;
 			case Protocol::STP::DISCONNECT_CLIENT:
@@ -89,7 +101,20 @@ void Client::Receive()
 				ConsoleWait(1000.f);
 				DisconnectWithoutNotify();
 				break;
+			case Protocol::STP::JOIN_GAME:
+				
+				ims.Read(&posX); ims.Read(&posY);
+				phase = EPhase::CREATE_GAME;
 
+				break;
+				
+			case Protocol::STP::NEW_PLAYER:
+				
+				ims.Read(&posX); ims.Read(&posY); ims.Read(&receivedPort);
+				std::cout << "recibo" << posX << "-" << posY << "-" << receivedPort << std::endl;
+				phase = EPhase::ADD_PLAYER;
+
+				break;
 			}
 		}
 	}
@@ -112,6 +137,41 @@ void Client::SendCriticPacket()
 				pack->content->Write(pack->ID);
 				socket->Send(*pack->content, SERVER_IP);
 			}
+			timer.Start();
+		}
+	}
+}
+
+void Client::SendCommands()
+{
+	Timer timer; timer.Start();
+	while (isOpen)
+	{
+		if (timer.ElapsedSeconds() > T_SEND_COMMANDS)
+		{
+			if (!commands_no_validated.empty())
+			{
+				OutputMemoryStream oms;
+				oms.Write(Protocol::PTS::COMMAND);
+				oms.Write(commands_no_validated.size());
+
+				for (CommandList* c : commands_no_validated)
+				{
+					oms.Write(c->type.size());
+					std::queue<int> tmpCommandTypes = convert(c->type);
+					while (!tmpCommandTypes.empty())
+					{
+						oms.Write(tmpCommandTypes.front());
+						tmpCommandTypes.pop();
+					}
+					oms.Write(c->id);
+					oms.Write(player->GetPlayerPos().x);
+					oms.Write(player->GetPlayerPos().y);
+				}
+				
+				socket->Send(oms, SERVER_IP);
+			}
+
 			timer.Start();
 		}
 	}
@@ -155,11 +215,47 @@ void Client::DeleteCriticPacket(int id)
 	}
 }
 
+void Client::CreateGame(int posX, int posY)
+{
+	player = new Player(posX, posY);
+	player->NewWindow();
+}
+
 void Client::AddCriticPacket(OutputMemoryStream *oms)
 {
 	Pack* tmpPack = new Pack(_tmpIds, 0.5f, oms);
 	current_cri_packets.push_back(tmpPack);
 	_tmpIds++;
+}
+
+void Client::AddCommandList(std::queue<CommandList::EType> commType)
+{
+	CommandList* command = new CommandList(_tmpCommIds, commType);
+	commands_no_validated.push_back(command);
+	_tmpCommIds++;
+	
+	std::cout << "Command list size: " << commands_no_validated.size() << std::endl;
+}
+
+void Client::SaveCommands()
+{
+	Timer timer; timer.Start();
+	while (isOpen)
+	{
+		if (timer.ElapsedSeconds() > T_SAVE_COMMANDS)
+		{
+			if (player != nullptr)
+			{
+				if (!player->tmp_Commands.empty())
+				{
+					AddCommandList(player->tmp_Commands);
+					player->ClearCommands();
+				}
+			}
+
+			timer.Start();
+		}
+	}
 }
 
 Client::Client()
@@ -171,12 +267,6 @@ Client::Client()
 	// Init
 	WelcomeMessage();
 
-	//Init SFML draw
-	//draw = new SFML_Draw();
-	//draw->AddSquare(150.0f, 150.0f);
-	//std::thread tDraw(Client::draw->UpdateWindow);
-	//tDraw.detach();
-
 	// Thread to receive packages
 	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
@@ -185,7 +275,15 @@ Client::Client()
 	std::thread tSend(&Client::SendCriticPacket, this);
 	tSend.detach();
 	
-	TS.Start();
+	// Thread to send commands
+	std::thread tSendCommands(&Client::SendCommands, this);
+	tSendCommands.detach();
+	
+	// Thread to save commands
+	std::thread tSaveCommands(&Client::SaveCommands, this);
+	tSaveCommands.detach();
+
+	TS.Start(); // Inactivity start timer
 }
 
 Client::~Client()
@@ -193,33 +291,71 @@ Client::~Client()
 	Disconnect();
 }
 
+void Client::Chat()
+{
+	std::cout << "CHAT";
+	std::cout << " | Write something";
+	std::cout << " | 'e' to exit" << std::endl;
+	auto future = std::async(std::launch::async, GetLineFromCin);
+	std::string message = future.get();
+
+	if (message.size() > 0) {
+
+		if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
+		DisconnectFromGetline(message);
+		message.clear();
+	}
+}
+
 void Client::Update()
 {
-	if (phase == EPhase::CHAT)
+	switch (phase)
 	{
-		std::cout << "CHAT" << std::endl;
-		std::cout << "Write something";
-		std::cout << " | 'e' to exit" << std::endl;
-		auto future = std::async(std::launch::async, GetLineFromCin);
-		std::string message = future.get();
+	case EPhase::MENU:
+	{
+		if (!joinGame)
+		{
+			std::string message;
+			std::cout << "JOIN GAME | Type [Y] | 'e' to exit" << std::endl;
+			std::cin >> message;
 
-	player->Update();
-
-		if (message.size() > 0) {
-			
-			Send(Protocol::Send(Protocol::PTS::CHAT,message));
-
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::JOIN_GAME, message));
 			DisconnectFromGetline(message);
-			message.clear();
+
+			joinGame = true;
 		}
 	}
-	
-	if (TS.ElapsedSeconds() > T_INACTIVITY)
-	{
-		Disconnect();
+		break;
+	case EPhase::CREATE_GAME:
+	{	
+		if (!creategame)
+		{
+			CreateGame(posX, posY);
+			creategame = true;
+		}
+		phase = EPhase::GAME;
 	}
+		break;
+	case EPhase::ADD_PLAYER:
+
+		std::cout << "player joining" << std::endl;
+		player->AddNewPlayer(posX, posY, receivedPort);
+		std::cout << "player joined" << std::endl;
+
+		phase = EPhase::GAME;
+		break;
+
+	case EPhase::GAME:
+		Chat();
+		break;
+	}
+	
+	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
     
-    player->Update();
+	if (player != nullptr && player->IsWindowActive())
+	{
+		player->Update();
+	}
 }
 
 bool Client::GetClientOpen()

@@ -7,18 +7,16 @@
 
 class SFML_Draw
 {
-	sf::RenderWindow* window;
+	sf::RenderWindow* window = nullptr;
 
 	sf::RectangleShape myPlayerTex;
-
+	
 	std::vector<sf::RectangleShape> squares;
 	std::vector<Projectile> projectiles;
 	
 	sf::Vector2f direction;
 	float velocity;
 	float delta;
-
-	bool shootKeyPreesed = false;
 
 public:
 	SFML_Draw();
@@ -30,7 +28,7 @@ public:
 	void DrawPlayer();
 
 	void AddSquare(float _sizeX, float _sizeY);
-	void MovePlayer();
+	void MovePlayer(sf::Vector2f newPos);
 	sf::Vector2f GetSquarepos(int _squareID);
 	void SetSquarePos(int _squareID, float _newPosX, float _newPosY);
 	void DeleteSquare(int _squareID);
@@ -39,8 +37,15 @@ public:
 	void MoveProjectiles();
 	void DrawProjectiles();
 
-
 	sf::RenderWindow* GetWindow();
+	void SetWindow(sf::RenderWindow* _window);
+	void NewWindow();
+	bool IsWindowActive();
 
+	float GetDelta();
+	void SetDelta(float _delta);
+
+	sf::RectangleShape GetPlayerTex();
+	sf::Vector2f GetPosition();
 };
 

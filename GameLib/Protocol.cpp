@@ -21,6 +21,34 @@ OutputMemoryStream* Protocol::Send(PTS protocol, int id, int id2)
 	return oms;
 }
 
+OutputMemoryStream* Protocol::Send(PTS protocol, int id, int id2, int id3)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->Write(id);
+	oms->Write(id2);
+	oms->Write(id3);
+
+	return oms;
+}
+
+OutputMemoryStream* Protocol::Send(PTS protocol, std::queue<int> id, int id2, int id3, int id4)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+
+	while (!id.empty())
+	{
+		oms->Write(id.front());
+		id.pop();
+	}
+	oms->Write(id2);
+	oms->Write(id3);
+	oms->Write(id4);
+	
+	return oms;
+}
+
 OutputMemoryStream* Protocol::Send(PTS protocol)
 {
 	OutputMemoryStream* oms = new OutputMemoryStream();
@@ -34,6 +62,16 @@ OutputMemoryStream* Protocol::Send(PTS protocol, std::string str)
 	OutputMemoryStream* oms = new OutputMemoryStream();
 	oms->Write(protocol);
 	oms->WriteString(str);
+
+	return oms;
+}
+
+OutputMemoryStream* Protocol::Send(PTS protocol, std::string str, std::string str2)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->WriteString(str);
+	oms->WriteString(str2);
 
 	return oms;
 }
@@ -73,6 +111,27 @@ OutputMemoryStream *Protocol::Send(STP protocol, int id, int id2)
 	return oms;
 }
 
+OutputMemoryStream* Protocol::Send(STP protocol, float id, float id2)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->Write(id);
+	oms->Write(id2);
+
+	return oms;
+}
+
+OutputMemoryStream* Protocol::Send(STP protocol, float id, float id2, unsigned short id3)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->Write(protocol);
+	oms->Write(id);
+	oms->Write(id2);
+	oms->Write(id3);
+
+	return oms;
+}
+
 OutputMemoryStream *Protocol::Send(STP protocol, std::string str, unsigned short id)
 {
 	OutputMemoryStream* oms = new OutputMemoryStream();
@@ -80,5 +139,14 @@ OutputMemoryStream *Protocol::Send(STP protocol, std::string str, unsigned short
 	oms->Write(id);
 	oms->WriteString(str);
 	
+	return oms;
+}
+
+OutputMemoryStream* Protocol::Send(STP protocol, std::string str, std::string str2)
+{
+	OutputMemoryStream* oms = new OutputMemoryStream();
+	oms->WriteString(str);
+	oms->WriteString(str2);
+
 	return oms;
 }
