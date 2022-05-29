@@ -115,22 +115,24 @@ void Server::CheckInactivity()
 {
 	while (isOpen)
 	{
-		for (New_Connection *nConn : new_con_table)
-		{
-			if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
+		if(!new_con_table.empty())
+			for (New_Connection *nConn : new_con_table)
 			{
-				DisconnectClient(nConn->port);
-				Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
+				if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
+				{
+					DisconnectClient(nConn->port);
+					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
+				}
 			}
-		}
-		for (Active_Connection* aConn : active_con_table)
-		{
-			if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
+		if (!active_con_table.empty())
+			for (Active_Connection* aConn : active_con_table)
 			{
-				DisconnectClient(aConn->port);
-				Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
+				if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
+				{
+					DisconnectClient(aConn->port);
+					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
+				}
 			}
-		}
 	}
 }
 

@@ -29,8 +29,8 @@ class Client
 	int _tmpCommIds = 0;
 	
 	// Player
-	//Player *player = new Player(150, 100, 100.0f);
-	Player *player;
+	Player *player = new Player(150, 100, PLAYER_VEL);
+	//Player *player;
 
 	// Init
 	void WelcomeMessage();

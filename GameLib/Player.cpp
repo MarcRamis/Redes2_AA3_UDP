@@ -33,7 +33,7 @@ void Player::Update()
         // draw everything here...
         // window.draw(...);
         
-        draw->MovePlayer(direction);
+        //draw->MovePlayer(direction);
         draw->MoveProjectiles();
 
         draw->DrawSquares();
@@ -59,26 +59,34 @@ void Player::GetInputs()
         if (event.type == sf::Event::KeyPressed)
         {
             // Move keys
-            if (event.key.code == sf::Keyboard::W)
+            if (event.key.code == sf::Keyboard::W && !moveKeyPressed)
             {
-                direction.y = -velocity;
+                //direction.y = -velocity;
+                draw->MovePlayer(sf::Vector2f(0.0f, -velocity));
                 tmp_Commands.push(CommandList::EType::MOVE_UP);
+                moveKeyPressed = true;
             }
-            else if (event.key.code == sf::Keyboard::S)
+            else if (event.key.code == sf::Keyboard::S && !moveKeyPressed)
             {
-                direction.y = velocity;
+                //direction.y = velocity;
+                draw->MovePlayer(sf::Vector2f(0.0f, velocity));
                 tmp_Commands.push(CommandList::EType::MOVE_DOWN);
+                moveKeyPressed = true;
             }
 
-            else if (event.key.code == sf::Keyboard::A)
+            else if (event.key.code == sf::Keyboard::A && !moveKeyPressed)
             {
-                direction.x = -velocity;
+                //direction.x = -velocity;
+                draw->MovePlayer(sf::Vector2f(-velocity, 0.0f));
                 tmp_Commands.push(CommandList::EType::MOVE_LEFT);
+                moveKeyPressed = true;
             }
-            else if (event.key.code == sf::Keyboard::D)
+            else if (event.key.code == sf::Keyboard::D && !moveKeyPressed)
             {
-                direction.x = velocity;
+                //direction.x = velocity;
+                draw->MovePlayer(sf::Vector2f(velocity, 0.0f));
                 tmp_Commands.push(CommandList::EType::MOVE_RIGHT);
+                moveKeyPressed = true;
             }
             
             // Shoot keys
@@ -110,20 +118,24 @@ void Player::GetInputs()
         {
             if (event.key.code == sf::Keyboard::W)
             {
-                direction.y = 0.0f;
+                //direction.y = 0.0f;
+                moveKeyPressed = false;
             }
             else if (event.key.code == sf::Keyboard::S)
             {
-                direction.y = 0.0f;
+                //direction.y = 0.0f;
+                moveKeyPressed = false;
             }
 
             if (event.key.code == sf::Keyboard::A)
             {
-                direction.x = 0.0f;
+                //direction.x = 0.0f;
+                moveKeyPressed = false;
             }
             else if (event.key.code == sf::Keyboard::D)
             {
-                direction.x = 0.0f;
+                //direction.x = 0.0f;
+                moveKeyPressed = false;
             }
 
             if (event.key.code == sf::Keyboard::Left)
