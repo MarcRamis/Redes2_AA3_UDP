@@ -276,18 +276,18 @@ void Client::Update()
 		break;
 	case EPhase::GAME:
 	{
-		std::cout << "CHAT";
-		std::cout << " | Write something";
-		std::cout << " | 'e' to exit" << std::endl;
-		auto future = std::async(std::launch::async, GetLineFromCin);
-		std::string message = future.get();
-		
-		if (message.size() > 0) {
-		
-			if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
-			DisconnectFromGetline(message);
-			message.clear();
-		}
+		//std::cout << "CHAT";
+		//std::cout << " | Write something";
+		//std::cout << " | 'e' to exit" << std::endl;
+		//auto future = std::async(std::launch::async, GetLineFromCin);
+		//std::string message = future.get();
+		//
+		//if (message.size() > 0) {
+		//
+		//	if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
+		//	DisconnectFromGetline(message);
+		//	message.clear();
+		//}
 
 	}
 		break;
@@ -295,7 +295,7 @@ void Client::Update()
 	
 	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
     
-	if (player->GetWindow() != nullptr)
+	if (player != nullptr && player->IsWindowActive())
 	{
 		player->Update();
 	}

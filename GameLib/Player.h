@@ -5,7 +5,7 @@
 
 class Player
 {
-	SFML_Draw* draw;
+	SFML_Draw* draw = nullptr;
 	float velocity;
 	sf::Vector2f direction;
 
@@ -31,5 +31,7 @@ public:
 	void NewWindow();
 	sf::RenderWindow* GetWindow();
 	void SetWindow(sf::RenderWindow* _window);
+
+	bool IsWindowActive();
 };
 

@@ -40,6 +40,7 @@ public:
 	sf::RenderWindow* GetWindow();
 	void SetWindow(sf::RenderWindow* _window);
 	void NewWindow();
+	bool IsWindowActive();
 
 	float GetDelta();
 	void SetDelta(float _delta);

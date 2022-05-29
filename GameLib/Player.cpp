@@ -191,3 +191,15 @@ void Player::SetWindow(sf::RenderWindow* _window)
 {
     draw->SetWindow(_window);
 }
+
+bool Player::IsWindowActive()
+{
+    if (draw == nullptr)
+    {
+        return false;
+    }
+    else
+    {
+        return draw->IsWindowActive();
+    }
+}

@@ -74,6 +74,12 @@ void SFML_Draw::NewWindow()
     window = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
 }
 
+bool SFML_Draw::IsWindowActive()
+{
+    if (window == nullptr) return false;
+    else return true;
+}
+
 float SFML_Draw::GetDelta()
 {
     return delta;
