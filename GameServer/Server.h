@@ -26,7 +26,7 @@ class Server
 	// This search the client combined salt with the server combined salt of that client
 	New_Connection* SearchNewClientBySalt(unsigned int _clientCombSalt);
 	Active_Connection* SearchActiveClientBySalt(unsigned int _clientCombSalt); 
-	
+
 	//Send packets
 	void Send(OutputMemoryStream *pack, int port);
 
@@ -50,8 +50,11 @@ public:
 
 	// Setters
 
+	// Receive Packets
+	void Receive();
+
 	// Update
 	void Update();
 
-	void CreateGame(int _port);
+	Game *CreateGame(int _port);
 };

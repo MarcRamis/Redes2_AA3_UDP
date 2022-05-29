@@ -10,7 +10,7 @@ class SFML_Draw
 	sf::RenderWindow* window;
 
 	sf::RectangleShape myPlayerTex;
-
+	
 	std::vector<sf::RectangleShape> squares;
 	std::vector<Projectile> projectiles;
 	

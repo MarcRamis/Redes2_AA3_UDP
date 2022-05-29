@@ -176,6 +176,9 @@ Server::Server()
 	socket = new UdpSocket;
 	socket->Bind(SERVER_IP);
 
+	std::thread tReceive(&Server::Receive, this);
+	tReceive.detach();
+	
 	std::thread tCheckInactivity(&Server::CheckInactivity, this);
 	tCheckInactivity.detach();
 }
@@ -195,174 +198,187 @@ bool Server::GetServerOpen()
 	return isOpen;
 }
 
-void Server::CreateGame(int _port)
+Game *Server::CreateGame(int _port)
 {
 	Game* newGame = new Game();
 	newGame->GenPlayers(_port);
 	games.push_back(newGame);
+	
+	return newGame;
+}
+
+void Server::Receive()
+{
+	while (isOpen)
+	{
+		// Receive message
+		InputMemoryStream ims = *socket->Receive();
+		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
+		{
+			//Update client timer
+			UpdateClientTimer(socket->PortReceived());
+
+			// Receive header
+			int _header; ims.Read(&_header);
+
+			// Find Header
+			switch (static_cast<Protocol::PTS>(_header))
+			{
+			case Protocol::PTS::HELLO_SERVER:
+			{
+				// Read the message
+				std::string messageReceived, ipReceived;
+				messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
+				unsigned int clientSalt; ims.Read(&clientSalt);
+				int _criticId; ims.Read(&_criticId);
+
+				std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
+
+				// Generate Challenge
+				int challenge = GenerateChallenge();
+
+				if (IsNewClient(socket->PortReceived()))
+				{
+					// Create new client
+					New_Connection* newClient = new New_Connection(socket->PortReceived(),
+						socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
+					newClient->TS.Start();
+					newClient->name = GenerateName(); // Gen random name
+					new_con_table.push_back(newClient);
+
+					// Send critic packet confirmation
+					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
+
+					// Send New Challenge Request
+					Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST, challenge,
+						newClient->serverSALT), socket->PortReceived());
+				}
+				else
+				{
+					// Search for already existing new client
+					New_Connection* oldClient = SearchNewClientByPort(socket->PortReceived());
+
+					if (oldClient != nullptr)
+					{
+						// Send critic packet confirmation
+						Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
+
+						// Send Same Challenge Request
+						Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST, oldClient->challenge,
+							oldClient->serverSALT), socket->PortReceived());
+					}
+				}
+			}
+
+			break;
+
+			case Protocol::PTS::CHALLENGE_RESPONSE:
+			{
+				// Receive challenge answer
+				int challengeResponse;
+				ims.Read(&challengeResponse);
+				unsigned int saltServerClient; ims.Read(&saltServerClient);
+				int _criticId; ims.Read(&_criticId);
+
+				// Identify client
+				New_Connection* myClient = SearchNewClientBySalt(saltServerClient);
+
+				if (myClient != nullptr)
+				{
+					// Challenge answer is correct
+					if (myClient->challenge == challengeResponse)
+					{
+						// Store the new client into active client
+						Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
+						act_con->TS.Start();
+						act_con->name = myClient->name;
+						active_con_table.push_back(act_con);
+
+						// Delete it from the new clients
+						DeleteNewClients(*myClient);
+
+						// Send critic packet confirmation
+						Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
+
+						// Send hello message to the 
+						Send(Protocol::Send(Protocol::STP::HELLO_CLIENT, act_con->name), myClient->port);
+					}
+					// Challenge answer is wrong
+					else
+					{
+						myClient->TRY--; // Rest try
+
+						// Check Tries
+						if (myClient->TRY > 0)
+						{
+							// Send Same Challenge Request
+							Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST,
+								myClient->challenge, myClient->serverSALT), myClient->port);
+						}
+						else //We delete the client
+						{
+							DeleteNewClients(*myClient);
+						}
+					}
+				}
+			}
+
+			break;
+
+			case Protocol::PTS::CHAT:
+			{
+				// Read the message
+				std::string messageReceived = " ";
+				messageReceived = ims.ReadString();
+				std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
+
+				// Send it to other clients
+				for (Active_Connection* p : active_con_table)
+				{
+					if (p->port != socket->PortReceived())
+					{
+						Send(Protocol::Send(Protocol::STP::CHAT,
+							messageReceived, socket->PortReceived()), p->port);
+					}
+				}
+			}
+			break;
+
+			case Protocol::PTS::DISCONNECT_CLIENT:
+
+				DisconnectClient(socket->PortReceived());
+				break;
+
+			case Protocol::PTS::COMMAND:
+				break;
+
+			case Protocol::PTS::JOIN_GAME:
+				std::string yConfirm = ims.ReadString();
+
+				// Confirmation
+				if (yConfirm == "Y" || yConfirm == "y")
+				{
+					// Generate new game if there is no game
+					if (games.empty()) {
+						Game *g = CreateGame(socket->PortReceived());
+						PlayerTex* p = g->FindPlayerByPort(socket->PortReceived());
+						Send(Protocol::Send(Protocol::STP::JOIN_GAME, 
+							p->tex->getPosition().x, p->tex->getPosition().y), p->port);
+					}
+					else
+					{
+						// Find 
+					}
+				}
+				break;
+			}
+
+
+		}
+	}
+
 }
 
 void Server::Update()
 {
-	// Receive message
-	InputMemoryStream ims = *socket->Receive();
-	if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
-	{	
-		//Update client timer
-		UpdateClientTimer(socket->PortReceived());
-
-		// Receive header
-		int _header; ims.Read(&_header);
-		
-		// Find Header
-		switch (static_cast<Protocol::PTS>(_header))
-		{
-		case Protocol::PTS::HELLO_SERVER:
-		{
-			// Read the message
-			std::string messageReceived, ipReceived;
-			messageReceived = ims.ReadString(); ipReceived = ims.ReadString();
-			unsigned int clientSalt; ims.Read(&clientSalt);		
-			int _criticId; ims.Read(&_criticId);
-
-			std::cout << socket->PortReceived() << " tells: " << messageReceived << ipReceived << std::endl;
-
-			// Generate Challenge
-			int challenge = GenerateChallenge();
-			
-			if (IsNewClient(socket->PortReceived()))
-			{
-				// Create new client
-				New_Connection *newClient = new New_Connection(socket->PortReceived(), 
-					socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
-				newClient->TS.Start();
-				newClient->name = GenerateName(); // Gen random name
-				new_con_table.push_back(newClient);
-				
-				// Send critic packet confirmation
-				Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
-
-				// Send New Challenge Request
-				Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST, challenge, 
-					newClient->serverSALT), socket->PortReceived());
-			}
-			else
-			{
-				// Search for already existing new client
-				New_Connection *oldClient = SearchNewClientByPort(socket->PortReceived());
-
-				if (oldClient != nullptr)
-				{
-					// Send critic packet confirmation
-					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
-
-					// Send Same Challenge Request
-					Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST, oldClient->challenge,
-						oldClient->serverSALT), socket->PortReceived());
-				}
-			}
-		}
-
-			break;	
-			
-		case Protocol::PTS::CHALLENGE_RESPONSE:
-		{
-			// Receive challenge answer
-			int challengeResponse;
-			ims.Read(&challengeResponse);
-			unsigned int saltServerClient; ims.Read(&saltServerClient);
-			int _criticId; ims.Read(&_criticId);
-			
-			// Identify client
-			New_Connection *myClient = SearchNewClientBySalt(saltServerClient);
-
-			if (myClient != nullptr)
-			{
-				// Challenge answer is correct
-				if (myClient->challenge == challengeResponse)
-				{
-					// Store the new client into active client
-					Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
-					act_con->TS.Start();
-					act_con->name = myClient->name;
-					active_con_table.push_back(act_con);
-					
-					// Delete it from the new clients
-					DeleteNewClients(*myClient);
-					
-					// Send critic packet confirmation
-					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
-
-					// Send hello message to the 
-					Send(Protocol::Send(Protocol::STP::HELLO_CLIENT, act_con->name), myClient->port);
-				}
-				// Challenge answer is wrong
-				else
-				{
-					myClient->TRY--; // Rest try
-					
-					// Check Tries
-					if (myClient->TRY > 0)
-					{
-						// Send Same Challenge Request
-						Send(Protocol::Send(Protocol::STP::CHALLENGE_REQUEST,
-							myClient->challenge, myClient->serverSALT), myClient->port);
-					}
-					else //We delete the client
-					{
-						DeleteNewClients(*myClient);
-					}
-				}
-			}
-		}
-			
-			break;
-
-		case Protocol::PTS::CHAT:
-		{
-			// Read the message
-			std::string messageReceived = " ";
-			messageReceived = ims.ReadString();
-			std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
-			
-			// Send it to other clients
-			for (Active_Connection* p : active_con_table)
-			{
-				if (p->port != socket->PortReceived())
-				{
-					Send(Protocol::Send(Protocol::STP::CHAT,
-						messageReceived, socket->PortReceived()), p->port);
-				}
-			}
-		}
-			break;
-
-		case Protocol::PTS::DISCONNECT_CLIENT:
-
-			DisconnectClient(socket->PortReceived());
-			break;
-
-		case Protocol::PTS::COMMAND:
-			break;
-
-		case Protocol::PTS::JOIN_GAME:
-			std::string yConfirm = ims.ReadString();
-
-			// Confirmation
-			if (yConfirm == "Y" || yConfirm == "y")
-			{
-				// Generate new game if there is no game
-				if (games.empty()) {
-					CreateGame(socket->PortReceived());
-				}
-				else
-				{
-					// Find 
-				}
-			}
-			break;
-		}
-
-
-	}
 }

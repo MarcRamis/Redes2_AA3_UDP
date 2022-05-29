@@ -13,7 +13,6 @@ class Player
 
 public:
 	
-	int port;
 	// Commands
 	std::queue<CommandList::EType> tmp_Commands;
 

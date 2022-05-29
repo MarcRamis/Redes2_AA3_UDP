@@ -30,7 +30,7 @@ class Client
 	int _tmpCommIds = 0;
 	
 	// Player
-	//Player *player = new Player(150, 100, 100.0f);
+	//Player *player = new Player(150, 100);
 	Player *player;
 
 	// Init
@@ -58,6 +58,8 @@ class Client
 
 	// Delete packets
 	void DeleteCriticPacket(int id);
+
+	void CreateGame(int posX, int posY);
 
 public:
 	

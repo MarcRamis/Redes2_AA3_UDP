@@ -79,8 +79,9 @@ void Client::Receive()
 			
 			case Protocol::STP::HELLO_CLIENT:
 			{
+				
 				myName = ims.ReadString();
-				std::cout << "WELCOME MESSAGE | Hello " + myName + ", welcome to the matrix. " << myName << std::endl;
+				std::cout << "WELCOME MESSAGE | Hello " + myName + ", welcome to the matrix. " << std::endl;
 				
 				phase = EPhase::MENU;
 			}
@@ -90,7 +91,13 @@ void Client::Receive()
 				ConsoleWait(1000.f);
 				DisconnectWithoutNotify();
 				break;
-
+			case Protocol::STP::JOIN_GAME:
+				
+				int posX, posY; ims.Read(&posX); ims.Read(&posY);
+				CreateGame(posX, posY);
+				
+				phase = EPhase::GAME;
+				break;
 			}
 		}
 	}
@@ -175,6 +182,12 @@ void Client::DeleteCriticPacket(int id)
 			return;
 		}
 	}
+}
+
+void Client::CreateGame(int posX, int posY)
+{
+	player = new Player(posX, posY);
+	player->NewWindow();
 }
 
 void Client::AddCriticPacket(OutputMemoryStream *oms)
