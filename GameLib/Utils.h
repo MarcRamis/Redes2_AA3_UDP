@@ -53,3 +53,21 @@ static unsigned int CombineSalts(unsigned int saltClient, unsigned int saltServe
 //	}
 //	return out;
 //}
+
+static std::string GenerateName()
+{
+	std::string names[] = { "Bob", "Marc", "Joel", "Alex", "Eric", "Jose" , "Paul", "Pere"};
+
+	int i;
+	i = rand() % 8;
+
+	return names[i];
+}
+
+static bool PlayerNamesMatch(std::string _name1, std::string _name2)
+{
+	char letter1 = _name1.front();
+	char letter2 = _name2.front();
+
+	return (letter1 > letter2 - 10 && letter1 < letter2 + 10);
+}
