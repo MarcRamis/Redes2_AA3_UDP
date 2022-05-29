@@ -12,3 +12,4 @@ const float T_INACTIVITY { 30.f };
 const float WIN_SIZE_X{ 800.f };
 const float WIN_SIZE_Y{ 600.f };
 const int MAX_GAME_PLAYERS{ 5 };
+const float MAX_VEL_PLAYER{ 10000.0f };
