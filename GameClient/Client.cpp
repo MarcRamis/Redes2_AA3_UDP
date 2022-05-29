@@ -1,5 +1,16 @@
 #include "Client.h"
 
+std::queue<int> convert(std::queue<CommandList::EType> in) {
+	
+	std::queue<int> out;
+	while (!in.empty())
+	{
+		out.push(static_cast<int>(in.front()));
+		in.pop();
+	}
+	return out;
+}
+
 void Client::WelcomeMessage()
 {
 	unsigned short port = CLIENT_IP_START;
@@ -93,10 +104,9 @@ void Client::Receive()
 				break;
 			case Protocol::STP::JOIN_GAME:
 				
-				/*int posX, posY;*/ ims.Read(&posX); ims.Read(&posY);
-				
-				
+				ims.Read(&posX); ims.Read(&posY);
 				phase = EPhase::GAME;
+
 				break;
 			}
 		}
@@ -134,11 +144,25 @@ void Client::SendCommands()
 		{
 			if (!commands_no_validated.empty())
 			{
-				//for (Command* c : commands_no_validated)
-				//{
-				//	std::queue<int> tmpCommandTypes = convert(c->type);
-				//	Send(Protocol::Send(Protocol::PTS::COMMAND, tmpCommandTypes, c->id, player->GetPlayerPos().x, player->GetPlayerPos().y));
-				//}
+				OutputMemoryStream oms;
+				oms.Write(Protocol::PTS::COMMAND);
+				oms.Write(commands_no_validated.size());
+
+				for (CommandList* c : commands_no_validated)
+				{
+					oms.Write(c->type.size());
+					std::queue<int> tmpCommandTypes = convert(c->type);
+					while (!tmpCommandTypes.empty())
+					{
+						oms.Write(tmpCommandTypes.front());
+						tmpCommandTypes.pop();
+					}
+					oms.Write(c->id);
+					oms.Write(player->GetPlayerPos().x);
+					oms.Write(player->GetPlayerPos().y);
+				}
+				
+				socket->Send(oms, SERVER_IP);
 			}
 
 			timer.Start();
@@ -213,11 +237,15 @@ void Client::SaveCommands()
 	{
 		if (timer.ElapsedSeconds() > T_SAVE_COMMANDS)
 		{
-			if (!player->tmp_Commands.empty())
+			if (player != nullptr)
 			{
-				AddCommandList(player->tmp_Commands);
-				player->ClearCommands();
+				if (!player->tmp_Commands.empty())
+				{
+					AddCommandList(player->tmp_Commands);
+					player->ClearCommands();
+				}
 			}
+
 			timer.Start();
 		}
 	}
@@ -240,13 +268,13 @@ Client::Client()
 	std::thread tSend(&Client::SendCriticPacket, this);
 	tSend.detach();
 	
-	//// Thread to send commands
-	//std::thread tSendCommands(&Client::SendCommands, this);
-	//tSendCommands.detach();
-	//
-	//// Thread to save commands
-	//std::thread tSaveCommands(&Client::SaveCommands, this);
-	//tSaveCommands.detach();
+	// Thread to send commands
+	std::thread tSendCommands(&Client::SendCommands, this);
+	tSendCommands.detach();
+	
+	// Thread to save commands
+	std::thread tSaveCommands(&Client::SaveCommands, this);
+	tSaveCommands.detach();
 
 	TS.Start(); // Inactivity start timer
 }
@@ -262,38 +290,40 @@ void Client::Update()
 	{
 	case EPhase::MENU:
 	{
-		std::cout << "JOIN GAME | Type [Y] | 'e' to exit" << std::endl;
-		auto future = std::async(std::launch::async, GetLineFromCin);
-		std::string message = future.get();
-		
-		if (message.size() > 0) {
-			
+		if (!joinGame)
+		{
+			std::string message;
+			std::cout << "JOIN GAME | Type [Y] | 'e' to exit" << std::endl;
+			std::cin >> message;
+
 			if (message != "e") Send(Protocol::Send(Protocol::PTS::JOIN_GAME, message));
 			DisconnectFromGetline(message);
-			message.clear();
+
+			joinGame = true;
 		}
 	}
 		break;
 	case EPhase::GAME:
 	{
-		//std::cout << "CHAT";
-		//std::cout << " | Write something";
-		//std::cout << " | 'e' to exit" << std::endl;
-		//auto future = std::async(std::launch::async, GetLineFromCin);
-		//std::string message = future.get();
-		//
-		//if (message.size() > 0) {
-		//
-		//	if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
-		//	DisconnectFromGetline(message);
-		//	message.clear();
-		//}
+		std::cout << "CHAT";
+		std::cout << " | Write something";
+		std::cout << " | 'e' to exit" << std::endl;
+		auto future = std::async(std::launch::async, GetLineFromCin);
+		std::string message = future.get();
+		
+		if (message.size() > 0) {
+		
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
+			DisconnectFromGetline(message);
+			message.clear();
+		}
+		
 		if (!creategame)
 		{
 			CreateGame(posX, posY);
 			creategame = true;
 		}
-		
+
 	}
 		break;
 	}

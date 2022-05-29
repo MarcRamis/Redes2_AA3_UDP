@@ -55,6 +55,6 @@ public:
 
 	// Update
 	void Update();
-
+	
 	Game *CreateGame(int _port);
 };

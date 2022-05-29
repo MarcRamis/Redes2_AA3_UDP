@@ -25,16 +25,17 @@ class Client
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
 	int _tmpIds = 0;
+
 	// Commands no validated to send
 	std::vector<CommandList*> commands_no_validated;
 	int _tmpCommIds = 0;
 	
 	// Player
-	//Player *player = new Player(150, 100);
 	Player *player;
 	int posX, posY;
 
 	bool creategame = false;
+	bool joinGame = false;
 
 	// Init
 	void WelcomeMessage();

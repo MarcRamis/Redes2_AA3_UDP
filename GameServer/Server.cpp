@@ -350,10 +350,45 @@ void Server::Receive()
 				break;
 
 			case Protocol::PTS::COMMAND:
+
+				// Save list of commands received
+				std::cout << "Receiving packages from " << socket->PortReceived() << std::endl;
+				
+				for (Active_Connection* conn : active_con_table)
+				{
+					if (conn->port == socket->PortReceived())
+					{
+						int sizeCommandList; ims.Read(&sizeCommandList);
+						for (int i = 0; i < sizeCommandList; i++)
+						{
+							std::queue<CommandList::EType> tmpCommandListTypes;
+
+							int sizeCommandListTypes; ims.Read(&sizeCommandListTypes);
+							
+							for (int j = 0; j < sizeCommandListTypes; j++)
+							{
+								int tmpCommand; ims.Read(&tmpCommand);
+								tmpCommandListTypes.push(static_cast<CommandList::EType>(tmpCommand));
+							}
+							int tmpIdList; ims.Read(&tmpIdList);
+							int posX; int posY; ims.Read(&posX); ims.Read(&posY);
+						
+							CommandList* tmpCommandList = new CommandList(tmpIdList, tmpCommandListTypes);
+							conn->current_commands.push(tmpCommandList);
+						}
+
+						std::cout << "Command list size: " << conn->current_commands.size() << std::endl;
+						
+						break;
+					}
+				}
+
 				break;
 
 			case Protocol::PTS::JOIN_GAME:
 				std::string yConfirm = ims.ReadString();
+
+				std::cout << "Game size: " << games.size() << std::endl;
 
 				// Confirmation
 				if (yConfirm == "Y" || yConfirm == "y")
@@ -367,7 +402,44 @@ void Server::Receive()
 					}
 					else
 					{
-						// Find 
+						for (Game *g : games)
+						{
+							for (PlayerTex *p : g->players)
+							{
+								for (Active_Connection *conn : active_con_table)
+								{
+									if (conn->port != socket->PortReceived())
+									{
+										if (p->port == conn->port)
+										{
+											// Join game
+											if (PlayerNamesMatch(SearchActiveClientByPort(socket->PortReceived())->name,
+												SearchActiveClientByPort(conn->port)->name))
+											{
+												std::cout << "Joining client to game" << std::endl;
+												g->GenPlayers(socket->PortReceived());
+												PlayerTex* p = g->FindPlayerByPort(socket->PortReceived());
+												Send(Protocol::Send(Protocol::STP::JOIN_GAME,
+													p->tex->getPosition().x, p->tex->getPosition().y), p->port);
+												
+												// Advice other clients
+
+											}
+											// Create game
+											else
+											{
+												std::cout << "Creating game" << std::endl;
+												Game* g = CreateGame(socket->PortReceived());
+												PlayerTex* p = g->FindPlayerByPort(socket->PortReceived());
+												Send(Protocol::Send(Protocol::STP::JOIN_GAME,
+													p->tex->getPosition().x, p->tex->getPosition().y), p->port);
+											}
+											break;
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 				break;

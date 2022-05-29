@@ -43,20 +43,9 @@ static unsigned int CombineSalts(unsigned int saltClient, unsigned int saltServe
 	return saltClient && saltServer;
 }
 
-//std::queue<int> convert(std::queue<Command::EType> in) {
-//	
-//	std::queue<int> out;
-//	while (!in.empty())
-//	{
-//		out.push(static_cast<int>(in.front()));
-//		in.pop();
-//	}
-//	return out;
-//}
-
 static std::string GenerateName()
 {
-	std::string names[] = { "Bob", "Marc", "Joel", "Alex", "Eric", "Jose" , "Paul", "Pere"};
+	std::string names[] = { "Bob", "Marc", "Joel", "Alex", "Zeta", "Jose" , "Paul", "Pere"};
 
 	int i;
 	i = rand() % 8;
