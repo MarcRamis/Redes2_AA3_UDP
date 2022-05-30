@@ -111,8 +111,11 @@ void Client::Receive()
 			case Protocol::STP::NEW_PLAYER:
 				
 				ims.Read(&posX); ims.Read(&posY); ims.Read(&receivedPort);
-				std::cout << "recibo" << posX << "-" << posY << "-" << receivedPort << std::endl;
-				phase = EPhase::ADD_PLAYER;
+				std::cout << "recibo " << posX << " - " << posY << " - " << receivedPort << std::endl;
+				playerMutex.lock();
+				player->AddNewPlayer(posX, posY, receivedPort);
+				playerMutex.unlock();
+				//phase = EPhase::ADD_PLAYER;
 
 				break;
 			}
@@ -346,9 +349,9 @@ void Client::Update()
 	case EPhase::ADD_PLAYER:
 
 		std::cout << "player joining" << std::endl;
-		playerMutex.lock();
-		player->AddNewPlayer(posX, posY, receivedPort);
-		playerMutex.unlock();
+		//playerMutex.lock();
+		//player->AddNewPlayer(posX, posY, receivedPort);
+		//playerMutex.unlock();
 		std::cout << "player joined" << std::endl;
 
 		phase = EPhase::GAME;
@@ -361,12 +364,10 @@ void Client::Update()
 	
 	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
     
-	playerMutex.lock();
 	if (player != nullptr && player->IsWindowActive())
 	{
 		player->Update();
 	}
-	playerMutex.unlock();
 }
 
 bool Client::GetClientOpen()
