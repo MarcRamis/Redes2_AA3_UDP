@@ -2,84 +2,103 @@
 
 bool Server::IsNewClient(unsigned short _clientID)
 {
+	tableNewClient.lock();
 	for (New_Connection *client : new_con_table)
 	{
-		if (_clientID == client->port) return false; //If It Finds The Client It Means That It Already Existed
+		if (_clientID == client->port)
+		{
+			tableNewClient.unlock();
+			return false; //If It Finds The Client It Means That It Already Existed
+		}
 	}
-
+	tableNewClient.unlock();
 	return true;
 }
 
 New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 {
+	tableNewClient.lock();
 	for (New_Connection *client : new_con_table)
 	{
-		if (_clientID == client->port) return client;
+		if (_clientID == client->port)
+		{
+			tableNewClient.unlock();
+			return client;
+		}
+			
 	}
-
+	tableNewClient.unlock();
 	return nullptr;
 }
 
-Active_Connection* Server::SearchActiveClientByPort(unsigned short _clientID)
+Active_Connection* Server::SearchActiveClientByPort(unsigned short _clientID) //Importante esto al no tener mutex hay que ponerlo donde se use la funcion//
 {
 	for (Active_Connection* client : active_con_table)
 	{
-		if (_clientID == client->port) return client;
+		if (_clientID == client->port)
+		{
+			return client;
+		}
 	}
-
 	return nullptr;
 }
 
 Active_Connection* Server::SearchActiveClientBySalt(unsigned int _clientCombSalt)
 {
+	tableActiveClient.lock();
 	for (Active_Connection* client : active_con_table)
 	{
 		unsigned int combSalt = client->clientSALT & client->serverSALT;
 		if (_clientCombSalt == combSalt)
 		{
+			tableActiveClient.unlock();
 			return client;
 		}
 	}
-
+	tableActiveClient.unlock();
 	return nullptr;
 }
 
 New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 {
+	tableNewClient.lock();
 	for (New_Connection *client : new_con_table)
 	{
 		unsigned int serSalt = client->clientSALT & client->serverSALT;
 		if (_clientSalt == serSalt)
 		{
+			tableNewClient.unlock();
 			return client;
 		}
 	}
-	
+	tableNewClient.unlock();
 	return nullptr;
 }
 
 void Server::DeleteNewClients(New_Connection _clientToDelete)
 {
 	int i = 0;
-
+	tableNewClient.lock();
 	while (_clientToDelete.port != new_con_table[i]->port)
 	{
 		i++;
 	}
 
 	new_con_table.erase(new_con_table.begin() + i);
+	tableNewClient.unlock();
 }
 
 void Server::DeleteActiveClients(Active_Connection _clientToDelete)
 {
 	int i = 0;
-
+	tableActiveClient.lock();
 	while (_clientToDelete.port != active_con_table[i]->port)
 	{
 		i++;
 	}
 
 	active_con_table.erase(active_con_table.begin() + i);
+	tableActiveClient.unlock();
 }
 
 void Server::DisconnectClient(int port)
@@ -94,6 +113,7 @@ void Server::DisconnectClient(int port)
 	else
 	{
 		// Send a message to other clients to let them know a player disconnected
+		tableActiveClient.lock();
 		for (Active_Connection* p : active_con_table)
 		{
 			if (p->port != port)
@@ -107,6 +127,7 @@ void Server::DisconnectClient(int port)
 		
 		// Delete if the combined salt coincide with the combined salt client
 		DeleteActiveClients(*SearchActiveClientByPort(port));
+		tableActiveClient.unlock();
 		std::cout << "Deleted the client with port: " << port << std::endl;
 	}
 }
@@ -117,6 +138,7 @@ void Server::CheckInactivity()
 	{
 		if (!new_con_table.empty())
 		{
+			tableNewClient.lock();
 			for (New_Connection* nConn : new_con_table)
 			{
 				if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
@@ -125,10 +147,12 @@ void Server::CheckInactivity()
 					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
 				}
 			}
+			tableNewClient.unlock();
 		}
 		
 		if (!active_con_table.empty())
 		{
+			tableActiveClient.lock();
 			for (Active_Connection* aConn : active_con_table)
 			{
 				if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
@@ -137,6 +161,7 @@ void Server::CheckInactivity()
 					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
 				}
 			}
+			tableActiveClient.unlock();
 		}
 	}
 }
@@ -147,6 +172,7 @@ void Server::UpdateClientTimer(int port)
 	{
 		if (!new_con_table.empty())
 		{
+			tableNewClient.lock();
 			for (New_Connection* conn : new_con_table)
 			{
 				if (conn->port == port)
@@ -154,12 +180,14 @@ void Server::UpdateClientTimer(int port)
 					conn->TS.Start();
 				}
 			}
+			tableNewClient.unlock();
 		}
 	}
 	else
 	{
 		if (!active_con_table.empty())
 		{
+			tableActiveClient.lock();
 			for (Active_Connection* conn : active_con_table)
 			{
 				if (conn->port == port)
@@ -167,6 +195,7 @@ void Server::UpdateClientTimer(int port)
 					conn->TS.Start();
 				}
 			}
+			tableActiveClient.unlock();
 		}
 	}
 }
@@ -253,7 +282,9 @@ void Server::Receive()
 						socket->AddressStringReceived(), clientSalt, GenerateSalt(), challenge);
 					newClient->TS.Start();
 					newClient->name = GenerateName(); // Gen random name
+					tableNewClient.lock();
 					new_con_table.push_back(newClient);
+					tableNewClient.unlock();
 
 					// Send critic packet confirmation
 					Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
@@ -301,7 +332,9 @@ void Server::Receive()
 						Active_Connection* act_con = new Active_Connection(myClient->port, myClient->address, myClient->clientSALT, myClient->serverSALT);
 						act_con->TS.Start();
 						act_con->name = myClient->name;
+						tableActiveClient.lock();
 						active_con_table.push_back(act_con);
+						tableActiveClient.unlock();
 
 						// Delete it from the new clients
 						DeleteNewClients(*myClient);
@@ -342,6 +375,7 @@ void Server::Receive()
 				std::cout << socket->PortReceived() << ": " << messageReceived << std::endl;
 
 				// Send it to other clients
+				tableActiveClient.lock();
 				for (Active_Connection* p : active_con_table)
 				{
 					if (p->port != socket->PortReceived())
@@ -350,6 +384,7 @@ void Server::Receive()
 							messageReceived, socket->PortReceived()), p->port);
 					}
 				}
+				tableActiveClient.unlock();
 			}
 			break;
 
@@ -362,7 +397,7 @@ void Server::Receive()
 
 				// Save list of commands received
 				std::cout << "Receiving packages from " << socket->PortReceived() << std::endl;
-				
+				tableActiveClient.lock();
 				for (Active_Connection* conn : active_con_table)
 				{
 					if (conn->port == socket->PortReceived())
@@ -396,6 +431,7 @@ void Server::Receive()
 						break;
 					}
 				}
+				tableActiveClient.unlock();
 
 				break;
 
@@ -420,6 +456,7 @@ void Server::Receive()
 						{
 							for (PlayerTex *p : g->players)
 							{
+								tableActiveClient.lock();
 								for (Active_Connection *conn : active_con_table)
 								{
 									if (conn->port != socket->PortReceived())
@@ -453,6 +490,7 @@ void Server::Receive()
 										}
 									}
 								}
+								tableActiveClient.unlock();
 							}
 						}
 					}
