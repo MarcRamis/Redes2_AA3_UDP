@@ -165,8 +165,10 @@ void Client::SendCommands()
 						tmpCommandTypes.pop();
 					}
 					oms.Write(c->id);
+					playerMutex.lock();
 					oms.Write(player->GetPlayerPos().x);
 					oms.Write(player->GetPlayerPos().y);
+					playerMutex.unlock();
 				}
 				
 				socket->Send(oms, SERVER_IP);
@@ -219,8 +221,10 @@ void Client::DeleteCriticPacket(int id)
 
 void Client::CreateGame(int posX, int posY)
 {
+	playerMutex.lock();
 	player = new Player(posX, posY);
 	player->NewWindow();
+	playerMutex.unlock();
 }
 
 void Client::AddCriticPacket(OutputMemoryStream *oms)
@@ -246,6 +250,7 @@ void Client::SaveCommands()
 	{
 		if (timer.ElapsedSeconds() > T_SAVE_COMMANDS)
 		{
+			playerMutex.lock();
 			if (player != nullptr)
 			{
 				if (!player->tmp_Commands.empty())
@@ -254,7 +259,7 @@ void Client::SaveCommands()
 					player->ClearCommands();
 				}
 			}
-
+			playerMutex.unlock();
 			timer.Start();
 		}
 	}
@@ -341,7 +346,9 @@ void Client::Update()
 	case EPhase::ADD_PLAYER:
 
 		std::cout << "player joining" << std::endl;
+		playerMutex.lock();
 		player->AddNewPlayer(posX, posY, receivedPort);
+		playerMutex.unlock();
 		std::cout << "player joined" << std::endl;
 
 		phase = EPhase::GAME;
@@ -354,10 +361,12 @@ void Client::Update()
 	
 	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
     
+	playerMutex.lock();
 	if (player != nullptr && player->IsWindowActive())
 	{
 		player->Update();
 	}
+	playerMutex.unlock();
 }
 
 bool Client::GetClientOpen()

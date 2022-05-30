@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "ConsoleControl.h"
 #include "Utils.h"
+#include <mutex>
 
 class Client
 {
@@ -37,6 +38,9 @@ class Client
 
 	bool creategame = false;
 	bool joinGame = false;
+
+	//Mutex
+	std::mutex playerMutex;
 
 	// Init
 	void WelcomeMessage();
