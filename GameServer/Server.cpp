@@ -78,27 +78,23 @@ New_Connection* Server::SearchNewClientBySalt(unsigned int _clientSalt)
 void Server::DeleteNewClients(New_Connection _clientToDelete)
 {
 	int i = 0;
-	tableNewClient.lock();
 	while (_clientToDelete.port != new_con_table[i]->port)
 	{
 		i++;
 	}
 
 	new_con_table.erase(new_con_table.begin() + i);
-	tableNewClient.unlock();
 }
 
 void Server::DeleteActiveClients(Active_Connection _clientToDelete)
 {
 	int i = 0;
-	tableActiveClient.lock();
 	while (_clientToDelete.port != active_con_table[i]->port)
 	{
 		i++;
 	}
 
 	active_con_table.erase(active_con_table.begin() + i);
-	tableActiveClient.unlock();
 }
 
 void Server::DisconnectClient(int port)
@@ -113,7 +109,6 @@ void Server::DisconnectClient(int port)
 	else
 	{
 		// Send a message to other clients to let them know a player disconnected
-		tableActiveClient.lock();
 		for (Active_Connection* p : active_con_table)
 		{
 			if (p->port != port)
@@ -127,12 +122,11 @@ void Server::DisconnectClient(int port)
 		
 		// Delete if the combined salt coincide with the combined salt client
 		DeleteActiveClients(*SearchActiveClientByPort(port));
-		tableActiveClient.unlock();
 		std::cout << "Deleted the client with port: " << port << std::endl;
 	}
 }
 
-void Server::CheckInactivity()
+void Server::CheckInactivity() //Thread
 {
 	while (isOpen)
 	{
@@ -243,7 +237,7 @@ Game *Server::CreateGame(int _port)
 	return newGame;
 }
 
-void Server::Receive()
+void Server::Receive() //Thread
 {
 	//srand(time(NULL));
 
@@ -337,7 +331,9 @@ void Server::Receive()
 						tableActiveClient.unlock();
 
 						// Delete it from the new clients
+						tableNewClient.lock();
 						DeleteNewClients(*myClient);
+						tableNewClient.unlock();
 
 						// Send critic packet confirmation
 						Send(Protocol::Send(Protocol::STP::CRI_PACK_RECEIVED, _criticId), socket->PortReceived());
@@ -359,7 +355,9 @@ void Server::Receive()
 						}
 						else //We delete the client
 						{
+							tableNewClient.lock();
 							DeleteNewClients(*myClient);
+							tableNewClient.unlock();
 						}
 					}
 				}
@@ -389,8 +387,11 @@ void Server::Receive()
 			break;
 
 			case Protocol::PTS::DISCONNECT_CLIENT:
-
+				tableNewClient.lock();
+				tableActiveClient.lock();
 				DisconnectClient(socket->PortReceived());
+				tableNewClient.unlock();
+				tableActiveClient.unlock();
 				break;
 
 			case Protocol::PTS::COMMAND:
@@ -474,7 +475,7 @@ void Server::Receive()
 													p->tex->getPosition().x, p->tex->getPosition().y), p->port);
 												
 												// Update my view
-												//UpdateClientView(socket->PortReceived());
+												UpdateClientView(socket->PortReceived());
 												
 											}
 											// Create game
