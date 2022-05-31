@@ -1,5 +1,4 @@
 #include "Player.h"
-#include <iostream>
 
 Player::Player()
 {
@@ -226,5 +225,15 @@ void Player::AddNewPlayer(int posX, int posY, int _port)
     PlayerTex* p = new PlayerTex(new sf::RectangleShape(sf::Vector2f(50, 50)), _port);
     p->tex->setPosition(posX, posY);
     other_players.push_back(p);
-    std::cout << "añdidod" << std::endl;
+}
+
+
+PlayerTex* Player::FindNewPlayer(int _port)
+{
+    for (PlayerTex *p : other_players)
+    {
+        if (p->port == _port) return p;
+    }
+
+    return nullptr;
 }

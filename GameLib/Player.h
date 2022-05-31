@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "SFML_Draw.h"
 #include "Command.h"
 
@@ -48,4 +50,5 @@ public:
 	bool IsWindowActive();
 
 	void AddNewPlayer(int posX, int posY, int _port);
+	PlayerTex* FindNewPlayer(int _port);
 };

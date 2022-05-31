@@ -130,9 +130,9 @@ void Server::CheckInactivity() //Thread
 {
 	while (isOpen)
 	{
+		tableNewClient.lock();
 		if (!new_con_table.empty())
 		{
-			tableNewClient.lock();
 			for (New_Connection* nConn : new_con_table)
 			{
 				if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
@@ -140,13 +140,13 @@ void Server::CheckInactivity() //Thread
 					DisconnectClient(nConn->port);
 					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
 				}
-			}
-			tableNewClient.unlock();
+			}	
 		}
+		tableNewClient.unlock();
 		
+		tableActiveClient.lock();
 		if (!active_con_table.empty())
 		{
-			tableActiveClient.lock();
 			for (Active_Connection* aConn : active_con_table)
 			{
 				if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
@@ -154,9 +154,9 @@ void Server::CheckInactivity() //Thread
 					DisconnectClient(aConn->port);
 					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
 				}
-			}
-			tableActiveClient.unlock();
+			}		
 		}
+		tableActiveClient.unlock();
 	}
 }
 
@@ -164,9 +164,9 @@ void Server::UpdateClientTimer(int port)
 {
 	if (!IsNewClient(port))
 	{
+		tableNewClient.lock();
 		if (!new_con_table.empty())
 		{
-			tableNewClient.lock();
 			for (New_Connection* conn : new_con_table)
 			{
 				if (conn->port == port)
@@ -174,14 +174,14 @@ void Server::UpdateClientTimer(int port)
 					conn->TS.Start();
 				}
 			}
-			tableNewClient.unlock();
 		}
+		tableNewClient.unlock();
 	}
 	else
 	{
+		tableActiveClient.lock();
 		if (!active_con_table.empty())
 		{
-			tableActiveClient.lock();
 			for (Active_Connection* conn : active_con_table)
 			{
 				if (conn->port == port)
@@ -189,14 +189,68 @@ void Server::UpdateClientTimer(int port)
 					conn->TS.Start();
 				}
 			}
-			tableActiveClient.unlock();
 		}
+		tableActiveClient.unlock();
 	}
 }
 
 void Server::Send(OutputMemoryStream *pack, int port)
 {
 	socket->Send(*pack, port);
+}
+
+void Server::CheckCommands()
+{
+	Timer timer; timer.Start();
+	while (isOpen)
+	{
+		if (timer.ElapsedSeconds() > T_CHECK_COMMANDS)
+		{
+			tableActiveClient.lock();
+			for (Active_Connection *conn : active_con_table)
+			{
+				while (!conn->current_commands.empty())
+				{
+					gameMtx.lock();
+					for(Game *g : games)
+					{
+						for (PlayerTex *p : g->players)
+						{
+							if (p->port == conn->port)
+							{
+								// Simulate commands
+								while (!conn->current_commands.front()->type.empty())
+								{
+									std::cout << static_cast<int>(conn->current_commands.front()->type.front())
+										<< std::endl;
+									g->Simulate(conn->current_commands.front()->type.front(), p->port);
+									conn->current_commands.front()->type.pop();
+								}
+			
+								// Check Final position
+								if (!g->CheckFinalPosition(
+									{conn->current_commands.front()->finalPosX,
+									conn->current_commands.front()->finalPosY}, 
+									p->tex->getPosition()))
+								{
+									std::cout << "incorrect position" << std::endl;
+									// Update the player that is being simulated
+								}
+
+								// Update others
+							}
+						}
+					}
+					
+					gameMtx.unlock();
+					conn->current_commands.pop();
+				}
+			}
+			tableActiveClient.unlock();
+
+			timer.Start();
+		}
+	}
 }
 
 Server::Server()
@@ -211,6 +265,9 @@ Server::Server()
 	
 	std::thread tCheckInactivity(&Server::CheckInactivity, this);
 	tCheckInactivity.detach();
+	
+	std::thread tCheckCommands(&Server::CheckCommands, this);
+	tCheckCommands.detach();
 }
 
 Server::~Server()
@@ -397,37 +454,29 @@ void Server::Receive() //Thread
 			case Protocol::PTS::COMMAND:
 
 				// Save list of commands received
-				std::cout << "Receiving packages from " << socket->PortReceived() << std::endl;
 				tableActiveClient.lock();
 				for (Active_Connection* conn : active_con_table)
 				{
 					if (conn->port == socket->PortReceived())
 					{
-						std::cout << "a" << std::endl;
 						int sizeCommandList; ims.Read(&sizeCommandList);
-						std::cout << "size command list" << std::endl;
 						for (int i = 0; i < sizeCommandList; i++)
 						{
 							std::queue<CommandList::EType> tmpCommandListTypes;
 
 							int sizeCommandListTypes; ims.Read(&sizeCommandListTypes);
-							std::cout << "command list types" << std::endl;
 							
 							for (int j = 0; j < sizeCommandListTypes; j++)
 							{
 								int tmpCommand; ims.Read(&tmpCommand);
 								tmpCommandListTypes.push(static_cast<CommandList::EType>(tmpCommand));
-								std::cout << "push to tmp command list types" << std::endl;
 							}
 							int tmpIdList; ims.Read(&tmpIdList);
-							int posX; int posY; ims.Read(&posX); ims.Read(&posY);
+							float posX; float posY; ims.Read(&posX); ims.Read(&posY);
 						
-							CommandList* tmpCommandList = new CommandList(tmpIdList, tmpCommandListTypes);
+							CommandList* tmpCommandList = new CommandList(tmpIdList, tmpCommandListTypes, posX, posY);
 							conn->current_commands.push(tmpCommandList);
-							std::cout << "push to command list" << std::endl;
 						}
-
-						std::cout << "Command list size: " << conn->current_commands.size() << std::endl;
 						
 						break;
 					}
@@ -439,12 +488,15 @@ void Server::Receive() //Thread
 			case Protocol::PTS::JOIN_GAME:
 				std::string yConfirm = ims.ReadString();
 
+				gameMtx.lock();
 				std::cout << "Game size: " << games.size() << std::endl;
+				gameMtx.unlock();
 
 				// Confirmation
 				if (yConfirm == "Y" || yConfirm == "y")
 				{
 					// Generate new game if there is no game
+					gameMtx.lock();
 					if (games.empty()) {
 						Game *g = CreateGame(socket->PortReceived());
 						PlayerTex* p = g->FindPlayerByPort(socket->PortReceived());
@@ -498,6 +550,7 @@ void Server::Receive() //Thread
 							}
 						}
 					}
+					gameMtx.unlock();
 				}
 				break;
 			}
@@ -524,7 +577,7 @@ void Server::UpdateClientView(int _port)
 				{
 					if (p->port != _port)
 					{
-						Send(Protocol::Send(Protocol::STP::NEW_PLAYER, 
+						Send(Protocol::Send(Protocol::STP::UPDATE_VIEW, 
 							p->tex->getPosition().x, p->tex->getPosition().y, p->port), _port);
 					}
 				}

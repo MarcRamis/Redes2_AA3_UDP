@@ -108,14 +108,22 @@ void Client::Receive()
 
 				break;
 				
-			case Protocol::STP::NEW_PLAYER:
+			case Protocol::STP::UPDATE_VIEW:
 				
-				ims.Read(&posX); ims.Read(&posY); ims.Read(&receivedPort);
-				std::cout << "recibo " << posX << " - " << posY << " - " << receivedPort << std::endl;
+				unsigned short _receivedPort; ims.Read(&posX); ims.Read(&posY); ims.Read(&_receivedPort);
+
+				// New player
 				playerMutex.lock();
-				player->AddNewPlayer(posX, posY, receivedPort);
+				if (player->FindNewPlayer(_receivedPort) == nullptr)
+				{
+					std::cout << "Adding new player to the game with port: " << _receivedPort << " at location " << posX << " - " << posY << std::endl;
+					player->AddNewPlayer(posX, posY, _receivedPort);
+				}
+				else
+				{
+					player->SetPlayerPos(sf::Vector2f(posX, posY));
+				}
 				playerMutex.unlock();
-				//phase = EPhase::ADD_PLAYER;
 
 				break;
 			}
@@ -156,11 +164,11 @@ void Client::SendCommands()
 			{
 				OutputMemoryStream oms;
 				oms.Write(Protocol::PTS::COMMAND);
-				oms.Write(commands_no_validated.size());
+				oms.Write(static_cast<int>(commands_no_validated.size()));
 
 				for (CommandList* c : commands_no_validated)
 				{
-					oms.Write(c->type.size());
+					oms.Write(static_cast<int>(c->type.size()));
 					std::queue<int> tmpCommandTypes = convert(c->type);
 					while (!tmpCommandTypes.empty())
 					{
@@ -345,16 +353,6 @@ void Client::Update()
 		}
 		phase = EPhase::GAME;
 	}
-		break;
-	case EPhase::ADD_PLAYER:
-
-		std::cout << "player joining" << std::endl;
-		//playerMutex.lock();
-		//player->AddNewPlayer(posX, posY, receivedPort);
-		//playerMutex.unlock();
-		std::cout << "player joined" << std::endl;
-
-		phase = EPhase::GAME;
 		break;
 
 	case EPhase::GAME:

@@ -34,7 +34,6 @@ class Client
 	// Player
 	Player *player;
 	float posX, posY;
-	unsigned short receivedPort;
 
 	bool creategame = false;
 	bool joinGame = false;
