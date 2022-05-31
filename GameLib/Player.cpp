@@ -41,7 +41,7 @@ void Player::Update()
         draw->DrawPlayer();
         for (PlayerTex *p : other_players)
         {
-            std::cout << "draw client with port: " << p->port << std::endl;
+            //std::cout << "draw client with port: " << p->port << std::endl;
             draw->GetWindow()->draw(*p->tex);
         }
         draw->DrawProjectiles();

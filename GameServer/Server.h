@@ -9,6 +9,7 @@
 #include "Protocol.h"
 #include "Game.h"
 #include "Utils.h"
+#include <mutex>
 
 class Server
 {
@@ -20,6 +21,10 @@ class Server
 
 	// Check if is new  client
 	bool IsNewClient(unsigned short _clientID);
+
+	//Mutex
+	std::mutex tableNewClient;
+	std::mutex tableActiveClient;
 	
 	// This search the client port with the server combined port
 	New_Connection* SearchNewClientByPort(unsigned short _clientID);
