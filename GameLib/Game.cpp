@@ -85,3 +85,47 @@ PlayerTex *Game::FindPlayerByPort(int _port)
 
 	return nullptr;
 }
+
+void Game::Simulate(CommandList::EType commandType, int _port)
+{
+	for (PlayerTex *p : players)
+	{
+		if (p->port == _port)
+		{
+			switch (commandType)
+			{
+			case CommandList::EType::MOVE_UP:
+				p->tex->move(sf::Vector2f(0,-MAX_VEL_PLAYER * delta));
+				break;
+			case CommandList::EType::MOVE_RIGHT:
+				p->tex->move(sf::Vector2f(MAX_VEL_PLAYER * delta, 0));
+				break;
+			case CommandList::EType::MOVE_DOWN:
+				p->tex->move(sf::Vector2f(0, MAX_VEL_PLAYER * delta));
+				break;
+			case CommandList::EType::MOVE_LEFT:
+				p->tex->move(sf::Vector2f(-MAX_VEL_PLAYER * delta, 0));
+				break;
+			case CommandList::EType::SHOOT_UP:
+				std::cout << p->port << ": Shooting up" << std::endl;
+				break;
+			case CommandList::EType::SHOOT_RIGHT:
+				std::cout << p->port << ": Shooting right" << std::endl;
+				break;
+			case CommandList::EType::SHOOT_DOWN:
+				std::cout << p->port << ": Shooting down" << std::endl;
+				break;
+			case CommandList::EType::SHOOT_LEFT:
+				std::cout << p->port << ": Shooting left" << std::endl;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+bool Game::CheckFinalPosition(sf::Vector2f pos1, sf::Vector2f pos2)
+{
+	return pos1 == pos2;
+}

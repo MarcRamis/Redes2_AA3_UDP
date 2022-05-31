@@ -25,6 +25,7 @@ class Server
 	//Mutex
 	std::mutex tableNewClient;
 	std::mutex tableActiveClient;
+	std::mutex gameMtx;
 	
 	// This search the client port with the server combined port
 	New_Connection* SearchNewClientByPort(unsigned short _clientID);
@@ -36,7 +37,8 @@ class Server
 
 	//Send packets
 	void Send(OutputMemoryStream *pack, int port);
-
+	void CheckCommands();
+	
 	// Delete clients
 	void DeleteNewClients(New_Connection _clientToDelete);
 	void DeleteActiveClients(Active_Connection _clientToDelete);
@@ -45,6 +47,10 @@ class Server
 	// Time stamp
 	void CheckInactivity();
 	void UpdateClientTimer(int port);
+
+	// Update Views
+	void UpdateClientView(int _port); // this works only for new clients (i think)
+	void UpdateClientView2(int _port);
 
 public:
 
@@ -62,7 +68,6 @@ public:
 	
 	// Update
 	void Update();
-	void UpdateClientView(int _port);
 	
 	Game *CreateGame(int _port);
 };

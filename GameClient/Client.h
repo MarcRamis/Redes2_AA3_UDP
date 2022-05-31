@@ -21,7 +21,7 @@ class Client
 	// This has to change for the info that our client needs
 	New_Connection* new_con;
 	std::string myName;
-	Timer TS; // Time stamp from server
+	Timer* TS = new Timer; // Time stamp from server
 	
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
@@ -34,13 +34,13 @@ class Client
 	// Player
 	Player *player;
 	float posX, posY;
-	unsigned short receivedPort;
 
 	bool creategame = false;
 	bool joinGame = false;
 
 	//Mutex
 	std::mutex playerMutex;
+	std::mutex timerInactivityMtx;
 
 	// Init
 	void WelcomeMessage();
@@ -70,6 +70,7 @@ class Client
 
 	void CreateGame(int posX, int posY);
 	void Chat();
+	void CheckInactivity();
 
 public:
 	

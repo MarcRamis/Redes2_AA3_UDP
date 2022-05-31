@@ -7,6 +7,7 @@ const float TIMESTAMP_DEFAULT{ 10.f };
 const int TRIES_DEFAULT { 2 };
 const float T_SEND{ 0.5f };
 const float T_SEND_COMMANDS{ 0.5f };
+const float T_CHECK_COMMANDS{ 0.5f };
 const float T_SAVE_COMMANDS{ 0.05f };
 const float T_INACTIVITY { 30.f };
 const float WIN_SIZE_X{ 800.f };

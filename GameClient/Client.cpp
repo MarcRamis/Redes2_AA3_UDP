@@ -39,7 +39,7 @@ void Client::Receive()
 		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
 			// Update inactivity server timer
-			TS.Start();
+			TS->Start();
 			
 			// Receive header
 			int _header; ims.Read(&_header);
@@ -108,14 +108,32 @@ void Client::Receive()
 
 				break;
 				
-			case Protocol::STP::NEW_PLAYER:
+			case Protocol::STP::UPDATE_VIEW:
 				
-				ims.Read(&posX); ims.Read(&posY); ims.Read(&receivedPort);
-				std::cout << "recibo " << posX << " - " << posY << " - " << receivedPort << std::endl;
+				unsigned short _receivedPort; ims.Read(&posX); ims.Read(&posY); ims.Read(&_receivedPort);
+
 				playerMutex.lock();
-				player->AddNewPlayer(posX, posY, receivedPort);
+				// Update this player
+				if (_receivedPort == socket->GetLocalPort())
+				{
+					player->SetPlayerPos(sf::Vector2f(posX, posY));
+				}
+				// Update other players
+				else
+				{
+					// New player
+					if (player->FindNewPlayer(_receivedPort) == nullptr)
+					{
+						std::cout << "Adding new player to the game with port: " << _receivedPort << " at location " << posX << " - " << posY << std::endl;
+						player->AddNewPlayer(posX, posY, _receivedPort);
+					}
+					// Already existing, then move
+					else
+					{
+						player->MoveOtherPlayer({posX, posY}, _receivedPort);
+					}
+				}
 				playerMutex.unlock();
-				//phase = EPhase::ADD_PLAYER;
 
 				break;
 			}
@@ -156,11 +174,11 @@ void Client::SendCommands()
 			{
 				OutputMemoryStream oms;
 				oms.Write(Protocol::PTS::COMMAND);
-				oms.Write(commands_no_validated.size());
+				oms.Write(static_cast<int>(commands_no_validated.size()));
 
 				for (CommandList* c : commands_no_validated)
 				{
-					oms.Write(c->type.size());
+					oms.Write(static_cast<int>(c->type.size()));
 					std::queue<int> tmpCommandTypes = convert(c->type);
 					while (!tmpCommandTypes.empty())
 					{
@@ -226,6 +244,7 @@ void Client::CreateGame(int posX, int posY)
 {
 	playerMutex.lock();
 	player = new Player(posX, posY);
+	player->myPort = socket->GetLocalPort();
 	player->NewWindow();
 	playerMutex.unlock();
 }
@@ -242,8 +261,6 @@ void Client::AddCommandList(std::queue<CommandList::EType> commType)
 	CommandList* command = new CommandList(_tmpCommIds, commType);
 	commands_no_validated.push_back(command);
 	_tmpCommIds++;
-	
-	std::cout << "Command list size: " << commands_no_validated.size() << std::endl;
 }
 
 void Client::SaveCommands()
@@ -293,7 +310,13 @@ Client::Client()
 	std::thread tSaveCommands(&Client::SaveCommands, this);
 	tSaveCommands.detach();
 
-	TS.Start(); // Inactivity start timer
+	// Thread to check inactivity
+	std::thread tCheckInactivity(&Client::CheckInactivity, this);
+	tCheckInactivity.detach();
+
+	// Thread to chat
+	//std::thread tChat(&Client::Chat, this);
+	//tChat.detach();
 }
 
 Client::~Client()
@@ -303,18 +326,46 @@ Client::~Client()
 
 void Client::Chat()
 {
-	std::cout << "CHAT";
-	std::cout << " | Write something";
-	std::cout << " | 'e' to exit" << std::endl;
-	auto future = std::async(std::launch::async, GetLineFromCin);
-	std::string message = future.get();
+	if (phase == EPhase::GAME)
+	{
+		std::cout << "CHAT";
+		std::cout << " | Write something";
+		std::cout << " | 'e' to exit" << std::endl;
+		auto future = std::async(std::launch::async, GetLineFromCin);
+		std::string message = future.get();
 
-	if (message.size() > 0) {
+		if (message.size() > 0) {
 
-		if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
-		DisconnectFromGetline(message);
-		message.clear();
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
+			DisconnectFromGetline(message);
+			message.clear();
+		}
 	}
+
+}
+
+void Client::CheckInactivity()
+{
+	TS->Start();
+
+	while (isOpen)
+	{
+		timerInactivityMtx.lock();
+		
+		if (TS->ElapsedSeconds() > T_INACTIVITY)
+		{
+			Disconnect();
+		}
+		timerInactivityMtx.unlock();
+
+		playerMutex.lock();
+		if (player != nullptr && player->closedGame)
+		{
+			Disconnect();
+		}
+		playerMutex.unlock();
+	}
+
 }
 
 void Client::Update()
@@ -346,28 +397,17 @@ void Client::Update()
 		phase = EPhase::GAME;
 	}
 		break;
-	case EPhase::ADD_PLAYER:
-
-		std::cout << "player joining" << std::endl;
-		//playerMutex.lock();
-		//player->AddNewPlayer(posX, posY, receivedPort);
-		//playerMutex.unlock();
-		std::cout << "player joined" << std::endl;
-
-		phase = EPhase::GAME;
-		break;
 
 	case EPhase::GAME:
-		Chat();
+		//Chat();
 		break;
 	}
 	
-	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
-    
 	if (player != nullptr && player->IsWindowActive())
 	{
 		player->Update();
 	}
+
 }
 
 bool Client::GetClientOpen()

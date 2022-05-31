@@ -12,7 +12,10 @@ public:
 	
 	int id;
 	std::queue<EType> type;
+	float finalPosX, finalPosY;
 	
 	CommandList() {};
 	CommandList(int _id, std::queue<EType> _type) : id(_id), type(_type) {};
+	CommandList(int _id, std::queue<EType> _type, float _finalPosX, float _finalPosY) 
+		: id(_id), type(_type), finalPosX(_finalPosX), finalPosY(_finalPosY) {};
 };

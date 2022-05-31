@@ -1,5 +1,4 @@
 #include "Player.h"
-#include <iostream>
 
 Player::Player()
 {
@@ -19,7 +18,6 @@ Player::Player(float _posX, float _posY)
 
 void Player::Update()
 {
-    sf::Clock clock;
 
     while (draw->GetWindow()->isOpen())
     {
@@ -32,9 +30,6 @@ void Player::Update()
         draw->GetWindow()->clear(sf::Color::Black);
 
         // draw everything here...
-        // window.draw(...);
-        
-        //draw->MovePlayer(direction);
         draw->MoveProjectiles();
 
         draw->DrawSquares();
@@ -60,7 +55,10 @@ void Player::GetInputs()
     {
         // "close requested" event: we close the window
         if (event.type == sf::Event::Closed)
+        {
             draw->GetWindow()->close();
+            closedGame = true;
+        }
 
         if (event.type == sf::Event::KeyPressed)
         {
@@ -172,8 +170,8 @@ void Player::GetInputs()
 void Player::Shoot(float dirX, float dirY)
 {
     draw->AddProjectile(20.f, 20.f,
-        draw->GetPlayerTex().getPosition().x, 
-        draw->GetPlayerTex().getPosition().y, dirX, dirY, draw->GetDelta());
+        draw->GetPlayerTex().getPosition().x + 15, 
+        draw->GetPlayerTex().getPosition().y + 15, dirX, dirY, draw->GetDelta());
     shootKeyPressed = true;
 }
 
@@ -181,7 +179,6 @@ void Player::ClearCommands()
 {
     std::queue<CommandList::EType> empty;
     std::swap(tmp_Commands, empty);
-    std::cout << "Clear size: " << tmp_Commands.size() << std::endl;
 }
 
 sf::Vector2f Player::GetPlayerPos()
@@ -226,5 +223,26 @@ void Player::AddNewPlayer(int posX, int posY, int _port)
     PlayerTex* p = new PlayerTex(new sf::RectangleShape(sf::Vector2f(50, 50)), _port);
     p->tex->setPosition(posX, posY);
     other_players.push_back(p);
-    std::cout << "añdidod" << std::endl;
+}
+
+
+PlayerTex* Player::FindNewPlayer(int _port)
+{
+    for (PlayerTex *p : other_players)
+    {
+        if (p->port == _port) return p;
+    }
+
+    return nullptr;
+}
+
+void Player::MoveOtherPlayer(sf::Vector2f pos, int _port)
+{
+    for (PlayerTex *p : other_players)
+    {
+        if (p->port == _port)
+        {
+            p->tex->setPosition(pos);
+        }
+    }
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "SFML_Draw.h"
 #include "Command.h"
 
@@ -21,8 +23,12 @@ class Player
 	bool shootKeyPressed = false;
 	bool moveKeyPressed = false;
 
+	sf::Clock clock;
+
 public:
 	
+	unsigned short myPort;
+	bool closedGame = false;
 	// Commands
 	std::queue<CommandList::EType> tmp_Commands;
 	
@@ -48,4 +54,7 @@ public:
 	bool IsWindowActive();
 
 	void AddNewPlayer(int posX, int posY, int _port);
+	PlayerTex* FindNewPlayer(int _port);
+
+	void MoveOtherPlayer(sf::Vector2f pos, int _port);
 };
