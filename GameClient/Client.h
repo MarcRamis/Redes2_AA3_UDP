@@ -21,7 +21,7 @@ class Client
 	// This has to change for the info that our client needs
 	New_Connection* new_con;
 	std::string myName;
-	Timer TS; // Time stamp from server
+	Timer* TS = new Timer; // Time stamp from server
 	
 	// Critic packets to send
 	std::vector<Pack*> current_cri_packets;
@@ -40,6 +40,7 @@ class Client
 
 	//Mutex
 	std::mutex playerMutex;
+	std::mutex timerInactivityMtx;
 
 	// Init
 	void WelcomeMessage();

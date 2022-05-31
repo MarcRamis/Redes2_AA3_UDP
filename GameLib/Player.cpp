@@ -182,7 +182,6 @@ void Player::ClearCommands()
 {
     std::queue<CommandList::EType> empty;
     std::swap(tmp_Commands, empty);
-    std::cout << "Clear size: " << tmp_Commands.size() << std::endl;
 }
 
 sf::Vector2f Player::GetPlayerPos()

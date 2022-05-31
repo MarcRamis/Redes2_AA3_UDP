@@ -39,7 +39,7 @@ void Client::Receive()
 		if (socket->StatusReceived().GetStatus() == Status::EStatusType::DONE)
 		{
 			// Update inactivity server timer
-			TS.Start();
+			TS->Start();
 			
 			// Receive header
 			int _header; ims.Read(&_header);
@@ -326,14 +326,17 @@ void Client::Chat()
 
 void Client::CheckInactivity()
 {
-	TS.Start();
+	TS->Start();
 
 	while (isOpen)
 	{
-		if (TS.ElapsedSeconds() > T_INACTIVITY)
+		timerInactivityMtx.lock();
+		
+		if (TS->ElapsedSeconds() > T_INACTIVITY)
 		{
 			Disconnect();
 		}
+		timerInactivityMtx.unlock();
 
 		playerMutex.lock();
 		if (player != nullptr && player->closedGame)

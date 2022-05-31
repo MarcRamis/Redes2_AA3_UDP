@@ -2,16 +2,13 @@
 
 bool Server::IsNewClient(unsigned short _clientID)
 {
-	tableNewClient.lock();
 	for (New_Connection *client : new_con_table)
 	{
 		if (_clientID == client->port)
 		{
-			tableNewClient.unlock();
 			return false; //If It Finds The Client It Means That It Already Existed
 		}
 	}
-	tableNewClient.unlock();
 	return true;
 }
 
@@ -164,7 +161,6 @@ void Server::UpdateClientTimer(int port)
 {
 	if (!IsNewClient(port))
 	{
-		tableNewClient.lock();
 		if (!new_con_table.empty())
 		{
 			for (New_Connection* conn : new_con_table)
@@ -175,7 +171,6 @@ void Server::UpdateClientTimer(int port)
 				}
 			}
 		}
-		tableNewClient.unlock();
 	}
 	else
 	{
@@ -233,6 +228,11 @@ void Server::CheckCommands()
 								{
 									std::cout << "incorrect position" << std::endl;
 									// Update the player that is being simulated
+									//Send(Protocol::Send(Protocol::STP::COMMAND), p->port);
+								}
+								else
+								{
+									std::cout << "correct position" << std::endl;
 								}
 
 								// Update others
@@ -258,8 +258,8 @@ Server::Server()
 	socket = new UdpSocket;
 	socket->Bind(SERVER_IP);
 
-	//std::thread tReceive(&Server::Receive, this);
-	//tReceive.detach();
+	std::thread tReceive(&Server::Receive, this);
+	tReceive.detach();
 	
 	std::thread tCheckInactivity(&Server::CheckInactivity, this);
 	tCheckInactivity.detach();
@@ -442,6 +442,7 @@ void Server::Receive() //Thread
 			break;
 
 			case Protocol::PTS::DISCONNECT_CLIENT:
+				
 				tableNewClient.lock();
 				tableActiveClient.lock();
 				DisconnectClient(socket->PortReceived());
@@ -561,7 +562,7 @@ void Server::Receive() //Thread
 
 void Server::Update()
 {
-	Receive();
+	//Receive();
 }
 
 void Server::UpdateClientView(int _port)
