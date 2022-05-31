@@ -30,9 +30,6 @@ void Player::Update()
         draw->GetWindow()->clear(sf::Color::Black);
 
         // draw everything here...
-        // window.draw(...);
-        
-        //draw->MovePlayer(direction);
         draw->MoveProjectiles();
 
         draw->DrawSquares();
@@ -173,8 +170,8 @@ void Player::GetInputs()
 void Player::Shoot(float dirX, float dirY)
 {
     draw->AddProjectile(20.f, 20.f,
-        draw->GetPlayerTex().getPosition().x, 
-        draw->GetPlayerTex().getPosition().y, dirX, dirY, draw->GetDelta());
+        draw->GetPlayerTex().getPosition().x + 15, 
+        draw->GetPlayerTex().getPosition().y + 15, dirX, dirY, draw->GetDelta());
     shootKeyPressed = true;
 }
 
