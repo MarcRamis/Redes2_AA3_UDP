@@ -474,8 +474,11 @@ void Server::Receive() //Thread
 												Send(Protocol::Send(Protocol::STP::JOIN_GAME,
 													p->tex->getPosition().x, p->tex->getPosition().y), p->port);
 												
-												// Update my view
-												UpdateClientView(socket->PortReceived());
+												// Update view for all clients
+												for (PlayerTex* p : g->players)
+												{
+													UpdateClientView(p->port);
+												}
 												
 											}
 											// Create game
