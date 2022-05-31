@@ -250,8 +250,6 @@ void Client::AddCommandList(std::queue<CommandList::EType> commType)
 	CommandList* command = new CommandList(_tmpCommIds, commType);
 	commands_no_validated.push_back(command);
 	_tmpCommIds++;
-	
-	std::cout << "Command list size: " << commands_no_validated.size() << std::endl;
 }
 
 void Client::SaveCommands()
@@ -301,7 +299,8 @@ Client::Client()
 	std::thread tSaveCommands(&Client::SaveCommands, this);
 	tSaveCommands.detach();
 
-	TS.Start(); // Inactivity start timer
+	std::thread tCheckInactivity(&Client::CheckInactivity, this);
+	tCheckInactivity.detach();
 }
 
 Client::~Client()
@@ -323,6 +322,27 @@ void Client::Chat()
 		DisconnectFromGetline(message);
 		message.clear();
 	}
+}
+
+void Client::CheckInactivity()
+{
+	TS.Start();
+
+	while (isOpen)
+	{
+		if (TS.ElapsedSeconds() > T_INACTIVITY)
+		{
+			Disconnect();
+		}
+
+		playerMutex.lock();
+		if (player != nullptr && player->closedGame)
+		{
+			Disconnect();
+		}
+		playerMutex.unlock();
+	}
+
 }
 
 void Client::Update()
@@ -360,12 +380,11 @@ void Client::Update()
 		break;
 	}
 	
-	if (TS.ElapsedSeconds() > T_INACTIVITY) Disconnect();
-    
 	if (player != nullptr && player->IsWindowActive())
 	{
 		player->Update();
 	}
+
 }
 
 bool Client::GetClientOpen()

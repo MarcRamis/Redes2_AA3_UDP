@@ -221,8 +221,6 @@ void Server::CheckCommands()
 								// Simulate commands
 								while (!conn->current_commands.front()->type.empty())
 								{
-									std::cout << static_cast<int>(conn->current_commands.front()->type.front())
-										<< std::endl;
 									g->Simulate(conn->current_commands.front()->type.front(), p->port);
 									conn->current_commands.front()->type.pop();
 								}
@@ -260,8 +258,8 @@ Server::Server()
 	socket = new UdpSocket;
 	socket->Bind(SERVER_IP);
 
-	std::thread tReceive(&Server::Receive, this);
-	tReceive.detach();
+	//std::thread tReceive(&Server::Receive, this);
+	//tReceive.detach();
 	
 	std::thread tCheckInactivity(&Server::CheckInactivity, this);
 	tCheckInactivity.detach();
@@ -563,6 +561,7 @@ void Server::Receive() //Thread
 
 void Server::Update()
 {
+	Receive();
 }
 
 void Server::UpdateClientView(int _port)

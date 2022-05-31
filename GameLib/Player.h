@@ -23,8 +23,11 @@ class Player
 	bool shootKeyPressed = false;
 	bool moveKeyPressed = false;
 
+	sf::Clock clock;
+
 public:
 	
+	bool closedGame = false;
 	// Commands
 	std::queue<CommandList::EType> tmp_Commands;
 	

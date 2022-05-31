@@ -18,7 +18,6 @@ Player::Player(float _posX, float _posY)
 
 void Player::Update()
 {
-    sf::Clock clock;
 
     while (draw->GetWindow()->isOpen())
     {
@@ -59,7 +58,10 @@ void Player::GetInputs()
     {
         // "close requested" event: we close the window
         if (event.type == sf::Event::Closed)
+        {
             draw->GetWindow()->close();
+            closedGame = true;
+        }
 
         if (event.type == sf::Event::KeyPressed)
         {

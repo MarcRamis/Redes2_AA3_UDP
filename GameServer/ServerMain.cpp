@@ -2,7 +2,7 @@
 
 int main()
 {
-	srand(time(NULL));
+	//srand(time(NULL));
 
 	Server server;
 	while (server.GetServerOpen())
