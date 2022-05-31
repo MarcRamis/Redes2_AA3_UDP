@@ -112,16 +112,26 @@ void Client::Receive()
 				
 				unsigned short _receivedPort; ims.Read(&posX); ims.Read(&posY); ims.Read(&_receivedPort);
 
-				// New player
 				playerMutex.lock();
-				if (player->FindNewPlayer(_receivedPort) == nullptr)
-				{
-					std::cout << "Adding new player to the game with port: " << _receivedPort << " at location " << posX << " - " << posY << std::endl;
-					player->AddNewPlayer(posX, posY, _receivedPort);
-				}
-				else
+				// Update this player
+				if (_receivedPort == socket->GetLocalPort())
 				{
 					player->SetPlayerPos(sf::Vector2f(posX, posY));
+				}
+				// Update other players
+				else
+				{
+					// New player
+					if (player->FindNewPlayer(_receivedPort) == nullptr)
+					{
+						std::cout << "Adding new player to the game with port: " << _receivedPort << " at location " << posX << " - " << posY << std::endl;
+						player->AddNewPlayer(posX, posY, _receivedPort);
+					}
+					// Already existing, then move
+					else
+					{
+						player->MoveOtherPlayer({posX, posY}, _receivedPort);
+					}
 				}
 				playerMutex.unlock();
 
@@ -234,6 +244,7 @@ void Client::CreateGame(int posX, int posY)
 {
 	playerMutex.lock();
 	player = new Player(posX, posY);
+	player->myPort = socket->GetLocalPort();
 	player->NewWindow();
 	playerMutex.unlock();
 }
@@ -299,8 +310,13 @@ Client::Client()
 	std::thread tSaveCommands(&Client::SaveCommands, this);
 	tSaveCommands.detach();
 
+	// Thread to check inactivity
 	std::thread tCheckInactivity(&Client::CheckInactivity, this);
 	tCheckInactivity.detach();
+
+	// Thread to chat
+	//std::thread tChat(&Client::Chat, this);
+	//tChat.detach();
 }
 
 Client::~Client()
@@ -310,18 +326,22 @@ Client::~Client()
 
 void Client::Chat()
 {
-	std::cout << "CHAT";
-	std::cout << " | Write something";
-	std::cout << " | 'e' to exit" << std::endl;
-	auto future = std::async(std::launch::async, GetLineFromCin);
-	std::string message = future.get();
+	if (phase == EPhase::GAME)
+	{
+		std::cout << "CHAT";
+		std::cout << " | Write something";
+		std::cout << " | 'e' to exit" << std::endl;
+		auto future = std::async(std::launch::async, GetLineFromCin);
+		std::string message = future.get();
 
-	if (message.size() > 0) {
+		if (message.size() > 0) {
 
-		if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
-		DisconnectFromGetline(message);
-		message.clear();
+			if (message != "e") Send(Protocol::Send(Protocol::PTS::CHAT, message));
+			DisconnectFromGetline(message);
+			message.clear();
+		}
 	}
+
 }
 
 void Client::CheckInactivity()
@@ -379,7 +399,7 @@ void Client::Update()
 		break;
 
 	case EPhase::GAME:
-		Chat();
+		//Chat();
 		break;
 	}
 	

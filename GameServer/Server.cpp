@@ -226,16 +226,13 @@ void Server::CheckCommands()
 									conn->current_commands.front()->finalPosY}, 
 									p->tex->getPosition()))
 								{
-									std::cout << "incorrect position" << std::endl;
-									// Update the player that is being simulated
-									//Send(Protocol::Send(Protocol::STP::COMMAND), p->port);
+									// Update the player that is being 
+									UpdateClientView2(p->port);
 								}
-								else
-								{
-									std::cout << "correct position" << std::endl;
-								}
-
-								// Update others
+							}
+							else // Update others
+							{
+								UpdateClientView2(p->port);
 							}
 						}
 					}
@@ -580,6 +577,26 @@ void Server::UpdateClientView(int _port)
 						Send(Protocol::Send(Protocol::STP::UPDATE_VIEW, 
 							p->tex->getPosition().x, p->tex->getPosition().y, p->port), _port);
 					}
+				}
+
+				break;
+			}
+		}
+	}
+}
+
+void Server::UpdateClientView2(int _port)
+{
+	for (Game* g : games)
+	{
+		for (PlayerTex* p : g->players)
+		{
+			if (p->port == _port)
+			{
+				for (PlayerTex* p : g->players)
+				{
+					Send(Protocol::Send(Protocol::STP::UPDATE_VIEW,
+						p->tex->getPosition().x, p->tex->getPosition().y, p->port), _port);
 				}
 
 				break;

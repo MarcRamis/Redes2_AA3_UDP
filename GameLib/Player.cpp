@@ -235,3 +235,14 @@ PlayerTex* Player::FindNewPlayer(int _port)
 
     return nullptr;
 }
+
+void Player::MoveOtherPlayer(sf::Vector2f pos, int _port)
+{
+    for (PlayerTex *p : other_players)
+    {
+        if (p->port == _port)
+        {
+            p->tex->setPosition(pos);
+        }
+    }
+}

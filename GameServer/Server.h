@@ -48,6 +48,10 @@ class Server
 	void CheckInactivity();
 	void UpdateClientTimer(int port);
 
+	// Update Views
+	void UpdateClientView(int _port); // this works only for new clients (i think)
+	void UpdateClientView2(int _port);
+
 public:
 
 	Server();
@@ -64,7 +68,6 @@ public:
 	
 	// Update
 	void Update();
-	void UpdateClientView(int _port);
 	
 	Game *CreateGame(int _port);
 };
