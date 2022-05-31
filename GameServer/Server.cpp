@@ -120,6 +120,41 @@ void Server::DisconnectClient(int port)
 		// Delete if the combined salt coincide with the combined salt client
 		DeleteActiveClients(*SearchActiveClientByPort(port));
 		std::cout << "Deleted the client with port: " << port << std::endl;
+
+		// Delete from the game if he was playing
+		for (int i = 0; i < games.size(); i++ )
+		{
+			for (int j = 0; j < games.at(i)->players.size(); j++)
+			{
+				if (games.at(i)->players.at(j)->port == port)
+				{
+					// Delete the player in the game
+					games.at(i)->players.erase(games.at(i)->players.begin() + j);
+
+					// If no more players, delete the game
+					if (games.at(i)->players.size() == 0) {		
+						games.at(i)->windowGame->close();
+						games.erase(games.begin() + i);
+						break;
+					}
+					// Update other clients view if there is still a game
+					//else
+					//{
+					//	for (Game *g : games)
+					//	{
+					//		for (PlayerTex *p : g->players)
+					//		{
+					//			if (p->port != port)
+					//			{
+					//				UpdateClientView2(port);
+					//			}
+					//		}
+					//	}
+					//	
+					//}
+				}
+			}
+		}
 	}
 }
 
@@ -442,9 +477,11 @@ void Server::Receive() //Thread
 				
 				tableNewClient.lock();
 				tableActiveClient.lock();
+				gameMtx.lock();
 				DisconnectClient(socket->PortReceived());
 				tableNewClient.unlock();
 				tableActiveClient.unlock();
+				gameMtx.unlock();
 				break;
 
 			case Protocol::PTS::COMMAND:
