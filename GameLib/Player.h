@@ -23,8 +23,6 @@ class Player
 	bool shootKeyPressed = false;
 	bool moveKeyPressed = false;
 
-	sf::Clock clock;
-
 public:
 	
 	unsigned short myPort;

@@ -10,7 +10,7 @@ public:
 	sf::RenderWindow *windowGame;
 	std::vector<PlayerTex*> players;
 	int maxPlayers = MAX_GAME_PLAYERS;
-	float delta;
+	float delta = DELTA_TIME;
 	
 	Game();
 	~Game();

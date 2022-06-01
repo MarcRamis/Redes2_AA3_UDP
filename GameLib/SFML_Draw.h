@@ -16,7 +16,7 @@ class SFML_Draw
 	
 	sf::Vector2f direction;
 	float velocity;
-	float delta;
+	float delta = DELTA_TIME;
 
 public:
 	SFML_Draw();

@@ -21,8 +21,6 @@ void Player::Update()
 
     while (draw->GetWindow()->isOpen())
     {
-        draw->SetDelta(clock.restart().asSeconds());
-
         // Inputs
         GetInputs();
 

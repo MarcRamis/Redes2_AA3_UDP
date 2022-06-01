@@ -46,12 +46,9 @@ void Game::AddPlayer(sf::Vector2f pos, int _port)
 void Game::Update()
 {
 	windowGame = new sf::RenderWindow(sf::VideoMode(WIN_SIZE_X, WIN_SIZE_Y), "My window");
-	sf::Clock clock;
 
 	while (windowGame->isOpen())
-	{
-		delta = clock.restart().asSeconds();
-		
+	{		
 		//// CHECK EVENTS
 		// check all the window's events that were triggered since the last iteration of the loop
 		sf::Event event;
