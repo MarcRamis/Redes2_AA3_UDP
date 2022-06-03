@@ -1,54 +1,36 @@
 #pragma once
 
-#include "Selector.h"
-#include "Player.h"
-#include <string>
+#include "UdpSocket.h"
+#include <queue>
 
-#include "Organ.h"
-#include "Virus.h"
-#include "Medicine.h"
-
-class Protocol
+static class Protocol
 {
 public:
-
-	enum class PEER_BSSProtocol
-	{
-		CREATEMATCH, CONSULTMATCHLIST, JOINMATCH, ACK_PWD, NONE
-	};
-	enum class BSS_PEERProtocol
-	{
-		MATCHLIST, ERROR, PEERPLAYERLIST, REQ_PWD, EXITBSSCOM, NONE
-	};
 	
-	enum class PEER_PEERProtocol
-	{
-		SENDMESSAGE, ACKREADYFORGAME, ISREADY, PLAYORGAN, INFECTORGAN, VACUNATEORGAN, DISCARDCARDS, YOULOST, LATEXGLOVE, ORGANTHIEF, NONE
-	};
-
-	static struct Peer
-	{
-		// Match creation protocols
-		static void AckPassword(TcpSocket* client, std::string &gameName);
-		static void Chat(std::vector<TcpSocket*>* _clientes, bool& isChat);
-		
-		// Game protocols
-		static void SendPlayOrgan(std::vector<TcpSocket*>* _clientes, int idPlayerThatUsedCard, int idCardPlayed);
-		static void ReceivedPlayedOrgan(std::vector<TcpSocket*>* _clientes, InputMemoryStream pack, Player& p);
-		static void SendInfectOrgan(std::vector<TcpSocket*>* _clientes, int idPlayerThatUsedCard, int idCardPlayed, int idCardFromPlayerAffected);
-		static void ReceivedOrganInfected(std::vector<TcpSocket*>* _clientes, InputMemoryStream pack, Player& p);
-		static void SendMedicineCard(std::vector<TcpSocket*>* _clientes, int idPlayerThatUsedCard, int idCardPlayed, int idCardFromPlayerAffected);
-		static void ReceivedMedicineCard(std::vector<TcpSocket*>* _clientes, InputMemoryStream pack, Player& p);
-		static void SendDiscardCard(std::vector<TcpSocket*>* _clientes, int idPlayerThatDiscard, int numberCards);
-		static void ReceivedDiscardCard(std::vector<TcpSocket*>* _clientes, InputMemoryStream pack, Player& p);
-		static void YouLost(std::vector<TcpSocket*>* _clientes);
-		static void SendLatexGlove(std::vector<TcpSocket*>* _clientes, int idPlayerThatUsedCard, int idCardPlayed, int gameTurn);
-		static void ReceivedLatexGlove(std::vector<TcpSocket*>* _clientes, InputMemoryStream pack, Player& p);
-		static void SendOrganThief(std::vector<TcpSocket*>* _clientes, int idPlayerThatUsedCard, int idCardPlayed, int idCardFromPlayerAffected);
-		static void ReceivedOrganThief(std::vector<TcpSocket*>* _clientes, InputMemoryStream pack, Player& p);
-	};
-	static struct Server
-	{
-
-	};
+	// Client Headers -> Client to server
+	static enum class PTS { HELLO_SERVER, CHALLENGE_RESPONSE, CHAT, DISCONNECT_CLIENT, COMMAND, JOIN_GAME, DISCONNECT_FROM_GAME };
+	
+	// Server Headers -> Server to peer
+	static enum class STP { CHALLENGE_REQUEST, HELLO_CLIENT, CHAT, DISCONNECT_CLIENT, CRI_PACK_RECEIVED, COMMAND, JOIN_GAME, UPDATE_VIEW};
+	
+	/* Client Functions -> Client to server |
+	Here it comes the data container that the user want to send */
+	static OutputMemoryStream *Send(PTS protocol, std::string str, std::string str2, int num);
+	static OutputMemoryStream *Send(PTS protocol, int id, int id2);
+	static OutputMemoryStream *Send(PTS protocol, int id, int id2, int id3);
+	static OutputMemoryStream *Send(PTS protocol, std::queue<int> id, int id2, int id3, int id4);
+	static OutputMemoryStream *Send(PTS protocol);
+	static OutputMemoryStream *Send(PTS protocol, std::string str);
+	static OutputMemoryStream *Send(PTS protocol, std::string str, std::string str2);
+	
+	/* Server Functions -> Server to peer | 
+	Here it comes the data container that the user want to send */
+	static OutputMemoryStream *Send(STP protocol, std::string str);
+	static OutputMemoryStream *Send(STP protocol, int id);
+	static OutputMemoryStream *Send(STP protocol);
+	static OutputMemoryStream *Send(STP protocol, int id, int id2);
+	static OutputMemoryStream *Send(STP protocol, float id, float id2);
+	static OutputMemoryStream *Send(STP protocol, float id, float id2, unsigned short id3);
+	static OutputMemoryStream *Send(STP protocol, std::string str, unsigned short id);
+	static OutputMemoryStream *Send(STP protocol, std::string str, std::string str2);
 };

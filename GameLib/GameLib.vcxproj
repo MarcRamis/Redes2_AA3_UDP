@@ -143,7 +143,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Command.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Projectile.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="SFML_Draw.h" />
+    <ClInclude Include="Tables.h" />
     <ClInclude Include="ConsoleControl.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="InputMemoryStream.h" />
     <ClInclude Include="OutputMemoryStream.h" />
     <ClInclude Include="Port.h" />
@@ -152,13 +160,25 @@
     <ClInclude Include="Status.h" />
     <ClInclude Include="TcpListener.h" />
     <ClInclude Include="TcpSocket.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="UdpSocket.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="Protocol.cpp" />
+    <ClCompile Include="SFML_Draw.cpp" />
+    <ClCompile Include="Tables.cpp" />
     <ClCompile Include="ConsoleControl.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Status.cpp" />
     <ClCompile Include="TcpListener.cpp" />
     <ClCompile Include="TcpSocket.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="UdpSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
