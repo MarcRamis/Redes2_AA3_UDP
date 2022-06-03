@@ -352,20 +352,28 @@ void Client::CheckInactivity()
 	{
 		timerInactivityMtx.lock();
 		
+		// Disconnect socket inactivity
 		if (TS->ElapsedSeconds() > T_INACTIVITY)
 		{
 			Disconnect();
 		}
 		timerInactivityMtx.unlock();
-
+		
+		// Disconnect only from game
 		playerMutex.lock();
 		if (player != nullptr && player->closedGame)
 		{
-			Disconnect();
+			Send(Protocol::Send(Protocol::PTS::DISCONNECT_FROM_GAME));
+			
+			joinGame = false;
+			creategame = false;
+			phase = EPhase::MENU;
+
+			delete player;
+			player = nullptr;
 		}
 		playerMutex.unlock();
 	}
-
 }
 
 void Client::Update()

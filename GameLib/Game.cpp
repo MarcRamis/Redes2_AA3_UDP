@@ -52,12 +52,14 @@ void Game::Update()
 		//// CHECK EVENTS
 		// check all the window's events that were triggered since the last iteration of the loop
 		sf::Event event;
+		ownMtx.lock();
 		while (windowGame->pollEvent(event))
 		{
 			// "close requested" event: we close the window
 			if (event.type == sf::Event::Closed)
 				windowGame->close();
 		}
+		ownMtx.unlock();
 
 		////////// DRAW
 		// clear the window with black color
@@ -125,4 +127,11 @@ void Game::Simulate(CommandList::EType commandType, int _port)
 bool Game::CheckFinalPosition(sf::Vector2f pos1, sf::Vector2f pos2)
 {
 	return pos1 == pos2;
+}
+
+void Game::CloseWindow()
+{
+	ownMtx.lock();
+	windowGame->close();
+	ownMtx.unlock();
 }
