@@ -149,18 +149,10 @@ void Client::Send(OutputMemoryStream *pack)
 
 void Client::SendCriticPacket()
 {
-	Timer timer; timer.Start();
-	while (isOpen)
+	for (Pack* pack : current_cri_packets)
 	{
-		if (timer.ElapsedSeconds() > T_SEND)
-		{
-			for (Pack *pack : current_cri_packets)
-			{
-				pack->content->Write(pack->ID);
-				socket->Send(*pack->content, SERVER_IP);
-			}
-			timer.Start();
-		}
+		pack->content->Write(pack->ID);
+		socket->Send(*pack->content, SERVER_IP);
 	}
 }
 
@@ -301,8 +293,8 @@ Client::Client()
 	tReceive.detach();
 	
 	// Thread to send packages
-	std::thread tSend(&Client::SendCriticPacket, this);
-	tSend.detach();
+	//std::thread tSend(&Client::SendCriticPacket, this);
+	//tSend.detach();
 	
 	// Thread to send commands
 	std::thread tSendCommands(&Client::SendCommands, this);
@@ -388,6 +380,12 @@ void Client::Times()
 		CheckInactivity();
 
 		// Send critic packets
+		if (send_cri_pack.ElapsedSeconds() > T_SEND)
+		{
+			SendCriticPacket();
+
+			send_cri_pack.Start();
+		}
 
 		// Save commands
 		
