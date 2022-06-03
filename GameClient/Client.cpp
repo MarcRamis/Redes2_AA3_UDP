@@ -98,9 +98,10 @@ void Client::Receive()
 			break;
 			case Protocol::STP::DISCONNECT_CLIENT:
 				
-				ConsoleWait(1000.f);
+				std::cout << "bye" << std::endl;
 				DisconnectWithoutNotify();
 				break;
+
 			case Protocol::STP::JOIN_GAME:
 				
 				ims.Read(&posX); ims.Read(&posY);
@@ -148,57 +149,40 @@ void Client::Send(OutputMemoryStream *pack)
 
 void Client::SendCriticPacket()
 {
-	Timer timer; timer.Start();
-	while (isOpen)
+	for (Pack* pack : current_cri_packets)
 	{
-		if (timer.ElapsedSeconds() > T_SEND)
-		{
-			for (Pack *pack : current_cri_packets)
-			{
-				pack->content->Write(pack->ID);
-				socket->Send(*pack->content, SERVER_IP);
-			}
-			timer.Start();
-		}
+		pack->content->Write(pack->ID);
+		socket->Send(*pack->content, SERVER_IP);
 	}
 }
 
 void Client::SendCommands()
 {
-	Timer timer; timer.Start();
-	while (isOpen)
+	if (!commands_no_validated.empty())
 	{
-		if (timer.ElapsedSeconds() > T_SEND_COMMANDS)
+		OutputMemoryStream oms;
+		oms.Write(Protocol::PTS::COMMAND);
+		oms.Write(static_cast<int>(commands_no_validated.size()));
+
+		for (CommandList* c : commands_no_validated)
 		{
-			if (!commands_no_validated.empty())
+			oms.Write(static_cast<int>(c->type.size()));
+			std::queue<int> tmpCommandTypes = convert(c->type);
+			while (!tmpCommandTypes.empty())
 			{
-				OutputMemoryStream oms;
-				oms.Write(Protocol::PTS::COMMAND);
-				oms.Write(static_cast<int>(commands_no_validated.size()));
-
-				for (CommandList* c : commands_no_validated)
-				{
-					oms.Write(static_cast<int>(c->type.size()));
-					std::queue<int> tmpCommandTypes = convert(c->type);
-					while (!tmpCommandTypes.empty())
-					{
-						oms.Write(tmpCommandTypes.front());
-						tmpCommandTypes.pop();
-					}
-					oms.Write(c->id);
-					playerMutex.lock();
-					oms.Write(player->GetPlayerPos().x);
-					oms.Write(player->GetPlayerPos().y);
-					playerMutex.unlock();
-				}
-				
-				socket->Send(oms, SERVER_IP);
-				
-				commands_no_validated.clear();
+				oms.Write(tmpCommandTypes.front());
+				tmpCommandTypes.pop();
 			}
-
-			timer.Start();
+			oms.Write(c->id);
+			playerMutex.lock();
+			oms.Write(player->GetPlayerPos().x);
+			oms.Write(player->GetPlayerPos().y);
+			playerMutex.unlock();
 		}
+
+		socket->Send(oms, SERVER_IP);
+
+		commands_no_validated.clear();
 	}
 }
 
@@ -218,6 +202,7 @@ void Client::Disconnect()
 void Client::DisconnectWithoutNotify()
 {
 	std::cout << "You are being disconnected for inactivity... Bye bye ~~" << std::endl;
+	ConsoleWait(1000.f);
 
 	// Clean memory
 	socket->Disconnect();
@@ -265,24 +250,16 @@ void Client::AddCommandList(std::queue<CommandList::EType> commType)
 
 void Client::SaveCommands()
 {
-	Timer timer; timer.Start();
-	while (isOpen)
+	playerMutex.lock();
+	if (player != nullptr)
 	{
-		if (timer.ElapsedSeconds() > T_SAVE_COMMANDS)
+		if (!player->tmp_Commands.empty())
 		{
-			playerMutex.lock();
-			if (player != nullptr)
-			{
-				if (!player->tmp_Commands.empty())
-				{
-					AddCommandList(player->tmp_Commands);
-					player->ClearCommands();
-				}
-			}
-			playerMutex.unlock();
-			timer.Start();
+			AddCommandList(player->tmp_Commands);
+			player->ClearCommands();
 		}
 	}
+	playerMutex.unlock();
 }
 
 Client::Client()
@@ -297,26 +274,10 @@ Client::Client()
 	// Thread to receive packages
 	std::thread tReceive(&Client::Receive, this);
 	tReceive.detach();
-	
-	// Thread to send packages
-	std::thread tSend(&Client::SendCriticPacket, this);
-	tSend.detach();
-	
-	// Thread to send commands
-	std::thread tSendCommands(&Client::SendCommands, this);
-	tSendCommands.detach();
-	
-	// Thread to save commands
-	std::thread tSaveCommands(&Client::SaveCommands, this);
-	tSaveCommands.detach();
 
-	// Thread to check inactivity
-	std::thread tCheckInactivity(&Client::CheckInactivity, this);
-	tCheckInactivity.detach();
-
-	// Thread to chat
-	//std::thread tChat(&Client::Chat, this);
-	//tChat.detach();
+	// Thread to check timers
+	std::thread tCheckTimes(&Client::CheckTimes, this);
+	tCheckTimes.detach();
 }
 
 Client::~Client()
@@ -346,33 +307,67 @@ void Client::Chat()
 
 void Client::CheckInactivity()
 {
+	// Disconnect socket inactivity
+	timerInactivityMtx.lock();
+	if (TS->ElapsedSeconds() > T_INACTIVITY_CLIENT)
+	{
+		Disconnect();
+	}
+	timerInactivityMtx.unlock();
+	
+	// Disconnect only from game
+	playerMutex.lock();
+	if (player != nullptr && player->closedGame)
+	{
+		Send(Protocol::Send(Protocol::PTS::DISCONNECT_FROM_GAME));
+		
+		joinGame = false;
+		creategame = false;
+		phase = EPhase::MENU;
+
+		delete player;
+		player = nullptr;
+	}
+	playerMutex.unlock();
+}
+
+void Client::CheckTimes()
+{
+	// Start timers
+	timerInactivityMtx.lock();
 	TS->Start();
+	timerInactivityMtx.unlock();
+
+	Timer send_cri_pack, save_comm, send_comm;
+	send_cri_pack.Start(); save_comm.Start(); send_comm.Start();
 
 	while (isOpen)
 	{
-		timerInactivityMtx.lock();
-		
-		// Disconnect socket inactivity
-		if (TS->ElapsedSeconds() > T_INACTIVITY)
-		{
-			Disconnect();
-		}
-		timerInactivityMtx.unlock();
-		
-		// Disconnect only from game
-		playerMutex.lock();
-		if (player != nullptr && player->closedGame)
-		{
-			Send(Protocol::Send(Protocol::PTS::DISCONNECT_FROM_GAME));
-			
-			joinGame = false;
-			creategame = false;
-			phase = EPhase::MENU;
+		// Check inactivity
+		CheckInactivity();
 
-			delete player;
-			player = nullptr;
+		// Send critic packets
+		if (send_cri_pack.ElapsedSeconds() > T_SEND)
+		{
+			SendCriticPacket();
+
+			send_cri_pack.Start();
 		}
-		playerMutex.unlock();
+
+		// Save commands
+		if (save_comm.ElapsedSeconds() > T_SAVE_COMMANDS)
+		{
+			SaveCommands();
+
+			save_comm.Start();
+		}
+		
+		// Send commands
+		if (send_comm.ElapsedSeconds() > T_SEND_COMMANDS)
+		{
+			SendCommands();
+			send_comm.Start();
+		}
 	}
 }
 

@@ -18,7 +18,6 @@ New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 	{
 		if (_clientID == client->port)
 		{
-			tableNewClient.unlock();
 			return client;
 		}
 			
@@ -172,12 +171,13 @@ void Server::CheckInactivity() //Thread
 		{
 			for (New_Connection* nConn : new_con_table)
 			{
-				if (nConn->TS.ElapsedSeconds() > T_INACTIVITY)
+				if (nConn->TS.ElapsedSeconds() > T_INACTIVITY_SERVER)
 				{
+					std::cout << nConn->port << std::endl;
+					Send(Protocol::Send(Protocol::STP::DISCONNECT_CLIENT), nConn->port);
 					DisconnectClient(nConn->port);
-					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), nConn->port);
 				}
-			}	
+			}
 		}
 		tableNewClient.unlock();
 		
@@ -186,10 +186,10 @@ void Server::CheckInactivity() //Thread
 		{
 			for (Active_Connection* aConn : active_con_table)
 			{
-				if (aConn->TS.ElapsedSeconds() > T_INACTIVITY)
+				if (aConn->TS.ElapsedSeconds() > T_INACTIVITY_SERVER)
 				{
+					Send(Protocol::Send(Protocol::STP::DISCONNECT_CLIENT), aConn->port);
 					DisconnectClient(aConn->port);
-					Send(Protocol::Send(Protocol::PTS::DISCONNECT_CLIENT), aConn->port);
 				}
 			}		
 		}
