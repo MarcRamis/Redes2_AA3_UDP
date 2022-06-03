@@ -72,7 +72,7 @@ class Client
 	void Chat();
 	void CheckInactivity();
 	
-	void Times();
+	void CheckTimes();
 
 public:
 	
