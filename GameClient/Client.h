@@ -52,6 +52,7 @@ class Client
 	void Send(OutputMemoryStream *pack);
 	void SendCriticPacket();
 	void SendCommands();
+	void SendChallenge();
 	
 	// Disconnect
 	void DisconnectFromGetline(std::string text);

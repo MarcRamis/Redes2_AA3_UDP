@@ -9,7 +9,7 @@ const float T_SEND{ 0.5f };
 const float T_SEND_COMMANDS{ 0.5f };
 const float T_CHECK_COMMANDS{ 0.5f };
 const float T_SAVE_COMMANDS{ 0.05f };
-const float T_INACTIVITY_SERVER { 30.f };
+const float T_INACTIVITY_SERVER { 5.f };
 const float T_INACTIVITY_CLIENT { 60.f };
 const float WIN_SIZE_X{ 800.f };
 const float WIN_SIZE_Y{ 600.f };

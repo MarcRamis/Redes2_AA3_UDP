@@ -54,21 +54,8 @@ void Client::Receive()
 				ims.Read(&new_con->challenge);
 				ims.Read(&new_con->serverSALT); // Receive Salt Server
 
-				// Make challenge
-				int challengeAnswer = -1;
-				
-				std::cout << "CONNECTING TO THE SERVER" << std::endl;;
-				//std::cout << " | 'e' to exit" << std::endl;
-				std::cout << "Write the next number: " << new_con->challenge << std::endl;
-				
-				auto future = std::async(std::launch::async, GetLineFromCin);
-				//DisconnectFromGetline(future.get());
-				challengeAnswer = stoi(future.get());
-
-				// Send challenge answer
-				AddCriticPacket(Protocol::Send(
-					Protocol::PTS::CHALLENGE_RESPONSE, challengeAnswer, 
-					new_con->clientSALT & new_con->serverSALT));
+				std::thread tChallengeResponse(&Client::SendChallenge, this);
+				tChallengeResponse.detach();
 			}
 			break;
 			
@@ -98,7 +85,6 @@ void Client::Receive()
 			break;
 			case Protocol::STP::DISCONNECT_CLIENT:
 				
-				std::cout << "bye" << std::endl;
 				DisconnectWithoutNotify();
 				break;
 
@@ -239,6 +225,25 @@ void Client::AddCriticPacket(OutputMemoryStream *oms)
 	Pack* tmpPack = new Pack(_tmpIds, 0.5f, oms);
 	current_cri_packets.push_back(tmpPack);
 	_tmpIds++;
+}
+
+void Client::SendChallenge()
+{
+	// Make challenge
+	int challengeAnswer = -1;
+
+	std::cout << "CONNECTING TO THE SERVER" << std::endl;;
+	//std::cout << " | 'e' to exit" << std::endl;
+	std::cout << "Write the next number: " << new_con->challenge << std::endl;
+
+	auto future = std::async(std::launch::async, GetLineFromCin);
+	//DisconnectFromGetline(future.get());
+	challengeAnswer = stoi(future.get());
+
+	// Send challenge answer
+	AddCriticPacket(Protocol::Send(
+		Protocol::PTS::CHALLENGE_RESPONSE, challengeAnswer,
+		new_con->clientSALT & new_con->serverSALT));
 }
 
 void Client::AddCommandList(std::queue<CommandList::EType> commType)
