@@ -18,7 +18,6 @@ Player::Player(float _posX, float _posY)
 
 void Player::Update()
 {
-
     while (draw->GetWindow()->isOpen())
     {
         // Inputs
@@ -26,15 +25,14 @@ void Player::Update()
 
         // clear the window with black color
         draw->GetWindow()->clear(sf::Color::Black);
-
+        
         // draw everything here...
         draw->MoveProjectiles();
-
+        
         draw->DrawSquares();
         draw->DrawPlayer();
         for (PlayerTex *p : other_players)
         {
-            //std::cout << "draw client with port: " << p->port << std::endl;
             draw->GetWindow()->draw(*p->tex);
         }
         draw->DrawProjectiles();

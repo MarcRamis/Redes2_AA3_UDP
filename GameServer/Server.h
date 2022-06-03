@@ -43,6 +43,7 @@ class Server
 	void DeleteNewClients(New_Connection _clientToDelete);
 	void DeleteActiveClients(Active_Connection _clientToDelete);
 	void DisconnectClient(int port);
+	void DisconnectClientFromGame(int port);
 
 	// Time stamp
 	void CheckInactivity();

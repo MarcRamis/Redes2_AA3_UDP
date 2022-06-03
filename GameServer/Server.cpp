@@ -14,7 +14,6 @@ bool Server::IsNewClient(unsigned short _clientID)
 
 New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 {
-	tableNewClient.lock();
 	for (New_Connection *client : new_con_table)
 	{
 		if (_clientID == client->port)
@@ -24,7 +23,6 @@ New_Connection* Server::SearchNewClientByPort(unsigned short _clientID)
 		}
 			
 	}
-	tableNewClient.unlock();
 	return nullptr;
 }
 
@@ -120,39 +118,46 @@ void Server::DisconnectClient(int port)
 		// Delete if the combined salt coincide with the combined salt client
 		DeleteActiveClients(*SearchActiveClientByPort(port));
 		std::cout << "Deleted the client with port: " << port << std::endl;
-
+		
 		// Delete from the game if he was playing
-		for (int i = 0; i < games.size(); i++ )
-		{
-			for (int j = 0; j < games.at(i)->players.size(); j++)
-			{
-				if (games.at(i)->players.at(j)->port == port)
-				{
-					// Delete the player in the game
-					games.at(i)->players.erase(games.at(i)->players.begin() + j);
+		DisconnectClientFromGame(port);
+	}
+}
 
-					// If no more players, delete the game
-					if (games.at(i)->players.size() == 0) {		
-						games.at(i)->windowGame->close();
-						games.erase(games.begin() + i);
-						break;
-					}
-					// Update other clients view if there is still a game
-					//else
-					//{
-					//	for (Game *g : games)
-					//	{
-					//		for (PlayerTex *p : g->players)
-					//		{
-					//			if (p->port != port)
-					//			{
-					//				UpdateClientView2(port);
-					//			}
-					//		}
-					//	}
-					//	
-					//}
+void Server::DisconnectClientFromGame(int port)
+{
+	// Delete from the game if he was playing
+	for (int i = 0; i < games.size(); i++)
+	{
+		for (int j = 0; j < games.at(i)->players.size(); j++)
+		{
+			if (games.at(i)->players.at(j)->port == port)
+			{
+				// Delete the player in the game
+				games.at(i)->players.erase(games.at(i)->players.begin() + j);
+
+				// If no more players, delete the game
+				if (games.at(i)->players.size() == 0) {
+					games.at(i)->CloseWindow();
+					games.erase(games.begin() + i);
+					break;
 				}
+				
+				// Update other clients view if there is still a game
+				//else
+				//{
+				//	for (Game *g : games)
+				//	{
+				//		for (PlayerTex *p : g->players)
+				//		{
+				//			if (p->port != port)
+				//			{
+				//				UpdateClientView2(port);
+				//			}
+				//		}
+				//	}
+				//	
+				//}
 			}
 		}
 	}
@@ -519,6 +524,7 @@ void Server::Receive() //Thread
 				break;
 
 			case Protocol::PTS::JOIN_GAME:
+			{
 				std::string yConfirm = ims.ReadString();
 
 				gameMtx.lock();
@@ -531,19 +537,19 @@ void Server::Receive() //Thread
 					// Generate new game if there is no game
 					gameMtx.lock();
 					if (games.empty()) {
-						Game *g = CreateGame(socket->PortReceived());
+						Game* g = CreateGame(socket->PortReceived());
 						PlayerTex* p = g->FindPlayerByPort(socket->PortReceived());
-						Send(Protocol::Send(Protocol::STP::JOIN_GAME, 
+						Send(Protocol::Send(Protocol::STP::JOIN_GAME,
 							p->tex->getPosition().x, p->tex->getPosition().y), p->port);
 					}
 					else
 					{
-						for (Game *g : games)
+						for (Game* g : games)
 						{
-							for (PlayerTex *p : g->players)
+							for (PlayerTex* p : g->players)
 							{
 								tableActiveClient.lock();
-								for (Active_Connection *conn : active_con_table)
+								for (Active_Connection* conn : active_con_table)
 								{
 									if (conn->port != socket->PortReceived())
 									{
@@ -558,13 +564,13 @@ void Server::Receive() //Thread
 												PlayerTex* p = g->FindPlayerByPort(socket->PortReceived());
 												Send(Protocol::Send(Protocol::STP::JOIN_GAME,
 													p->tex->getPosition().x, p->tex->getPosition().y), p->port);
-												
+
 												// Update view for all clients
 												for (PlayerTex* p : g->players)
 												{
 													UpdateClientView(p->port);
 												}
-												
+
 											}
 											// Create game
 											else
@@ -584,10 +590,16 @@ void Server::Receive() //Thread
 						}
 					}
 					gameMtx.unlock();
-				}
+			}	
+			}
+				break;
+				
+			case Protocol::PTS::DISCONNECT_FROM_GAME:
+				
+				DisconnectClientFromGame(socket->PortReceived());
+				
 				break;
 			}
-
 
 		}
 	}
