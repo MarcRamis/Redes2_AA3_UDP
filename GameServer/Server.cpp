@@ -102,24 +102,27 @@ void Server::DisconnectClient(int port)
 	// Disconnects an active client
 	else
 	{
-		// Send a message to other clients to let them know a player disconnected
-		for (Active_Connection* p : active_con_table)
+		if (SearchActiveClientByPort(port) != nullptr)
 		{
-			if (p->port != port)
+			// Send a message to other clients to let them know a player disconnected
+			for (Active_Connection* p : active_con_table)
 			{
-				std::string messageDisconnect = "--The player with port: " +
-					std::to_string(port) + " has been disconnected--";
-				
-				Send(Protocol::Send(Protocol::STP::CHAT, messageDisconnect, port), p->port);
+				if (p->port != port)
+				{
+					std::string messageDisconnect = "--The player with port: " +
+						std::to_string(port) + " has been disconnected--";
+
+					Send(Protocol::Send(Protocol::STP::CHAT, messageDisconnect, port), p->port);
+				}
 			}
+
+			// Delete if the combined salt coincide with the combined salt client
+			DeleteActiveClients(*SearchActiveClientByPort(port));
+			std::cout << "Deleted the client with port: " << port << std::endl;
+
+			// Delete from the game if he was playing
+			DisconnectClientFromGame(port);
 		}
-		
-		// Delete if the combined salt coincide with the combined salt client
-		DeleteActiveClients(*SearchActiveClientByPort(port));
-		std::cout << "Deleted the client with port: " << port << std::endl;
-		
-		// Delete from the game if he was playing
-		DisconnectClientFromGame(port);
 	}
 }
 
