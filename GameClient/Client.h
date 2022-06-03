@@ -71,6 +71,8 @@ class Client
 	void CreateGame(int posX, int posY);
 	void Chat();
 	void CheckInactivity();
+	
+	void Times();
 
 public:
 	

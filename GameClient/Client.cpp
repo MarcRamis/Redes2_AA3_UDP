@@ -98,9 +98,10 @@ void Client::Receive()
 			break;
 			case Protocol::STP::DISCONNECT_CLIENT:
 				
-				ConsoleWait(1000.f);
+				std::cout << "bye" << std::endl;
 				DisconnectWithoutNotify();
 				break;
+
 			case Protocol::STP::JOIN_GAME:
 				
 				ims.Read(&posX); ims.Read(&posY);
@@ -218,6 +219,7 @@ void Client::Disconnect()
 void Client::DisconnectWithoutNotify()
 {
 	std::cout << "You are being disconnected for inactivity... Bye bye ~~" << std::endl;
+	ConsoleWait(1000.f);
 
 	// Clean memory
 	socket->Disconnect();
@@ -311,12 +313,12 @@ Client::Client()
 	tSaveCommands.detach();
 
 	// Thread to check inactivity
-	std::thread tCheckInactivity(&Client::CheckInactivity, this);
-	tCheckInactivity.detach();
+	//std::thread tCheckInactivity(&Client::CheckInactivity, this);
+	//tCheckInactivity.detach();
 
 	// Thread to chat
-	//std::thread tChat(&Client::Chat, this);
-	//tChat.detach();
+	std::thread tTimes(&Client::Times, this);
+	tTimes.detach();
 }
 
 Client::~Client()
@@ -346,33 +348,50 @@ void Client::Chat()
 
 void Client::CheckInactivity()
 {
+	// Disconnect socket inactivity
+	timerInactivityMtx.lock();
+	if (TS->ElapsedSeconds() > T_INACTIVITY_CLIENT)
+	{
+		Disconnect();
+	}
+	timerInactivityMtx.unlock();
+	
+	// Disconnect only from game
+	playerMutex.lock();
+	if (player != nullptr && player->closedGame)
+	{
+		Send(Protocol::Send(Protocol::PTS::DISCONNECT_FROM_GAME));
+		
+		joinGame = false;
+		creategame = false;
+		phase = EPhase::MENU;
+
+		delete player;
+		player = nullptr;
+	}
+	playerMutex.unlock();
+}
+
+void Client::Times()
+{
+	// Start timers
+	timerInactivityMtx.lock();
 	TS->Start();
+	timerInactivityMtx.unlock();
+
+	Timer send_cri_pack, save_comm, send_comm;
+	send_cri_pack.Start(); save_comm.Start(); send_comm.Start();
 
 	while (isOpen)
 	{
-		timerInactivityMtx.lock();
-		
-		// Disconnect socket inactivity
-		if (TS->ElapsedSeconds() > T_INACTIVITY)
-		{
-			Disconnect();
-		}
-		timerInactivityMtx.unlock();
-		
-		// Disconnect only from game
-		playerMutex.lock();
-		if (player != nullptr && player->closedGame)
-		{
-			Send(Protocol::Send(Protocol::PTS::DISCONNECT_FROM_GAME));
-			
-			joinGame = false;
-			creategame = false;
-			phase = EPhase::MENU;
+		// Check inactivity
+		CheckInactivity();
 
-			delete player;
-			player = nullptr;
-		}
-		playerMutex.unlock();
+		// Send critic packets
+
+		// Save commands
+		
+		// Send commands
 	}
 }
 
